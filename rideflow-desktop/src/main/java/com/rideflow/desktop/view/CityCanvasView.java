@@ -29,10 +29,25 @@ public class CityCanvasView extends Canvas {
     private double hoverGridX = -1;
     private double hoverGridY = -1;
 
+    // Layer Toggles & Viewport
+    private boolean showGrid = true;
+    private boolean showHeatmap = true;
+    private boolean showRoutes = true;
+    private boolean showLabels = true;
+    private double zoomScale = 1.0;
+
     public CityCanvasView(double width, double height) {
         super(width, height);
         initInteractions();
     }
+
+    public void setShowGrid(boolean show) { this.showGrid = show; redraw(); }
+    public void setShowHeatmap(boolean show) { this.showHeatmap = show; redraw(); }
+    public void setShowRoutes(boolean show) { this.showRoutes = show; redraw(); }
+    public void setShowLabels(boolean show) { this.showLabels = show; redraw(); }
+    public void zoomIn() { this.zoomScale = Math.min(2.0, zoomScale + 0.2); redraw(); }
+    public void zoomOut() { this.zoomScale = Math.max(0.6, zoomScale - 0.2); redraw(); }
+    public void resetZoom() { this.zoomScale = 1.0; redraw(); }
 
     private void initInteractions() {
         setOnMouseMoved(event -> {
@@ -104,6 +119,7 @@ public class CityCanvasView extends Canvas {
     }
 
     private void drawSubtleGrid(GraphicsContext gc, double w, double h) {
+        if (!showGrid) return;
         gc.setStroke(Color.web("#171a26"));
         gc.setLineWidth(0.5);
 
@@ -140,7 +156,7 @@ public class CityCanvasView extends Canvas {
                 double traffic = trafficMap.getOrDefault(zoneId, 1.0);
 
                 // Surge Heat Wash
-                if (surge > 1.05) {
+                if (showHeatmap && surge > 1.05) {
                     double intensity = Math.min(1.0, (surge - 1.0) / 1.5);
                     Color glowStart = Color.color(0.95, 0.20, 0.25, 0.35 * intensity);
                     Color glowEnd = Color.color(0.95, 0.40, 0.10, 0.10 * intensity);
@@ -156,32 +172,35 @@ public class CityCanvasView extends Canvas {
                 gc.strokeRect(zx, zy, zoneWidth, zoneHeight);
 
                 // Zone Header Tag
-                gc.setFill(Color.web("#141724", 0.85));
-                gc.fillRoundRect(zx + 4, zy + 4, 52, 16, 4, 4);
+                if (showLabels) {
+                    gc.setFill(Color.web("#141724", 0.85));
+                    gc.fillRoundRect(zx + 4, zy + 4, 52, 16, 4, 4);
 
-                gc.setFill(Color.web("#a0aec0"));
-                gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 9));
-                gc.fillText("ZONE " + zoneId, zx + 8, zy + 15);
-
-                // Traffic / Surge Indicator Pill
-                if (surge > 1.05) {
-                    gc.setFill(Color.web("#ff4757"));
-                    gc.fillRoundRect(zx + 60, zy + 4, 38, 16, 4, 4);
-                    gc.setFill(Color.WHITE);
+                    gc.setFill(Color.web("#a0aec0"));
                     gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 9));
-                    gc.fillText(String.format("%.1fx", surge), zx + 65, zy + 15);
-                } else if (traffic > 1.2) {
-                    gc.setFill(Color.web("#ffaa00", 0.4));
-                    gc.fillRoundRect(zx + 60, zy + 4, 28, 16, 4, 4);
-                    gc.setFill(Color.web("#ffaa00"));
-                    gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 8));
-                    gc.fillText("BUSY", zx + 64, zy + 15);
+                    gc.fillText("ZONE " + zoneId, zx + 8, zy + 15);
+
+                    // Traffic / Surge Indicator Pill
+                    if (surge > 1.05) {
+                        gc.setFill(Color.web("#ff4757"));
+                        gc.fillRoundRect(zx + 60, zy + 4, 38, 16, 4, 4);
+                        gc.setFill(Color.WHITE);
+                        gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 9));
+                        gc.fillText(String.format("%.1fx", surge), zx + 65, zy + 15);
+                    } else if (traffic > 1.2) {
+                        gc.setFill(Color.web("#ffaa00", 0.4));
+                        gc.fillRoundRect(zx + 60, zy + 4, 28, 16, 4, 4);
+                        gc.setFill(Color.web("#ffaa00"));
+                        gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 8));
+                        gc.fillText("BUSY", zx + 64, zy + 15);
+                    }
                 }
             }
         }
     }
 
     private void drawTripVectors(GraphicsContext gc, double w, double h) {
+        if (!showRoutes) return;
         for (Map<String, Object> r : activeRides) {
             double px = ((Number) r.get("pickupX")).doubleValue() * (w / 100.0);
             double py = ((Number) r.get("pickupY")).doubleValue() * (h / 100.0);
@@ -325,6 +344,22 @@ public class CityCanvasView extends Canvas {
                 return r;
             }
         }
-        return null;
+
+        // Return zone info if clicked outside vehicles/rides
+        int col = Math.min(4, Math.max(0, (int) (gridX / 20.0)));
+        int row = Math.min(4, Math.max(0, (int) (gridY / 20.0)));
+        int zoneId = row * 5 + col + 1;
+        for (Map<String, Object> z : heatmap) {
+            if (((Number) z.get("zoneId")).intValue() == zoneId) {
+                Map<String, Object> zMap = new HashMap<>(z);
+                zMap.put("isZone", true);
+                return zMap;
+            }
+        }
+        Map<String, Object> fallback = new HashMap<>();
+        fallback.put("isZone", true);
+        fallback.put("zoneId", zoneId);
+        fallback.put("name", "Zone " + zoneId);
+        return fallback;
     }
 }

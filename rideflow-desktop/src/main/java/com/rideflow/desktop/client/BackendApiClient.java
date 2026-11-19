@@ -229,4 +229,61 @@ public class BackendApiClient {
     public CompletableFuture<Void> mobilizeFleetAsync(int zoneId, int count) {
         return postAsync("/api/v1/simulation/inject/mobilize-fleet?zoneId=" + zoneId + "&count=" + count, null, null);
     }
+
+    public CompletableFuture<Map<String, Object>> stepSimulationAsync(int ticks) {
+        return postAsync("/api/v1/simulation/step?ticks=" + ticks, null, new TypeReference<>() {});
+    }
+
+    public CompletableFuture<String> exportDriversCsvAsync() {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/api/v1/analytics/export/drivers"))
+                .header("Accept", "text/csv")
+                .GET()
+                .build();
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString()).thenApply(HttpResponse::body);
+    }
+
+    public CompletableFuture<String> exportZonesCsvAsync() {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/api/v1/analytics/export/zones"))
+                .header("Accept", "text/csv")
+                .GET()
+                .build();
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString()).thenApply(HttpResponse::body);
+    }
+
+    public CompletableFuture<String> exportSummaryCsvAsync() {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/api/v1/analytics/export/summary"))
+                .header("Accept", "text/csv")
+                .GET()
+                .build();
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString()).thenApply(HttpResponse::body);
+    }
+
+    public CompletableFuture<Map<String, Object>> getPricingConfigAsync() {
+        return getAsync("/api/v1/pricing/config", new TypeReference<>() {});
+    }
+
+    public CompletableFuture<Map<String, Object>> updatePricingConfigAsync(Map<String, Object> config) {
+        try {
+            String jsonBody = objectMapper.writeValueAsString(config);
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(baseUrl + "/api/v1/pricing/config"))
+                    .header("Content-Type", "application/json")
+                    .header("Accept", "application/json")
+                    .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
+            return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .thenApply(resp -> {
+                        try {
+                            return objectMapper.readValue(resp.body(), new TypeReference<Map<String, Object>>() {});
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+        } catch (Exception e) {
+            return CompletableFuture.failedFuture(e);
+        }
+    }
 }

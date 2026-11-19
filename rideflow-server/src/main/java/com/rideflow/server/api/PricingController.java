@@ -46,4 +46,10 @@ public class PricingController {
     public PricingConfig getPricingConfig() {
         return pricingService.getActiveConfig();
     }
+
+    @PutMapping("/config")
+    @Operation(summary = "Update and version the pricing configuration")
+    public PricingConfig updatePricingConfig(@RequestBody PricingConfig newConfig) {
+        return pricingService.updateConfig(newConfig);
+    }
 }

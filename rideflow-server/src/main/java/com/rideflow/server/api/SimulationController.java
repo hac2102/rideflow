@@ -73,6 +73,15 @@ public class SimulationController {
         return ResponseEntity.ok(getSimulationState());
     }
 
+    @PostMapping("/step")
+    @Operation(summary = "Advance simulation by N ticks (minutes), e.g. 1 or 5")
+    public ResponseEntity<SimulationStateDto> stepTicks(@RequestParam(defaultValue = "1") int ticks) {
+        for (int i = 0; i < Math.max(1, Math.min(60, ticks)); i++) {
+            simulationService.advanceOneTick();
+        }
+        return ResponseEntity.ok(getSimulationState());
+    }
+
     @PostMapping("/reset")
     @Operation(summary = "Reset the simulation engine with a specific scenario and seed")
     public ResponseEntity<SimulationStateDto> resetSimulation(@RequestBody(required = false) SimulationControlRequestDto dto) {

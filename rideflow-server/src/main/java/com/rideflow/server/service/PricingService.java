@@ -77,6 +77,24 @@ public class PricingService {
         return pricingConfigDao.findActiveConfig().orElseGet(PricingConfig::defaultConfig);
     }
 
+    public PricingConfig updateConfig(PricingConfig newConfig) {
+        PricingConfig current = getActiveConfig();
+        PricingConfig next = new PricingConfig(
+                null,
+                current.getVersion() + 1,
+                newConfig.getBaseFare() != null ? newConfig.getBaseFare() : current.getBaseFare(),
+                newConfig.getPerKmRate() != null ? newConfig.getPerKmRate() : current.getPerKmRate(),
+                newConfig.getPerMinuteRate() != null ? newConfig.getPerMinuteRate() : current.getPerMinuteRate(),
+                newConfig.getSurgeSensitivity() > 0 ? newConfig.getSurgeSensitivity() : current.getSurgeSensitivity(),
+                newConfig.getMaxSurgeCap() >= 1.0 ? newConfig.getMaxSurgeCap() : current.getMaxSurgeCap(),
+                true,
+                java.time.LocalDateTime.now()
+        );
+        long id = pricingConfigDao.save(next);
+        next.setConfigId((int) id);
+        return next;
+    }
+
     public List<Zone> getAllZones() {
         return zoneDao.findAll();
     }

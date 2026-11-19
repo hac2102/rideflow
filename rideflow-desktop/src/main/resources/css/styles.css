@@ -9,6 +9,40 @@
 }
 
 /* ==========================================
+   Fixed Left Sidebar Navigation System
+   ========================================== */
+.sidebar {
+    -fx-background-color: #101827;
+    -fx-border-color: #1f293d;
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 0;
+}
+
+.nav-item {
+    -fx-background-color: transparent;
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 10 18 10 18;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+
+.nav-item:hover {
+    -fx-background-color: #162032;
+    -fx-text-fill: #f8fafc;
+}
+
+.nav-item-active {
+    -fx-background-color: #1c2b42;
+    -fx-text-fill: #00f59b;
+    -fx-border-color: #00f59b;
+    -fx-border-width: 0 0 0 3;
+    -fx-font-weight: bold;
+}
+
+/* ==========================================
    Tab Pane Styling
    ========================================== */
 .tab-pane {

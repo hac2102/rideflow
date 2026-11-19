@@ -135,4 +135,54 @@ public class AnalyticsService {
         }
         return sw.toString();
     }
+
+    public String exportDriversToCsv() {
+        List<Driver> drivers = driverDao.findAll();
+        StringWriter sw = new StringWriter();
+        sw.write("DriverId,Name,VehicleType,VehicleNumber,X,Y,ZoneId,Status,Rating,TripsCompleted,TotalEarnings\n");
+        for (Driver d : drivers) {
+            sw.write(String.format("%d,%s,%s,%s,%.2f,%.2f,%d,%s,%.2f,%d,%s\n",
+                    d.getDriverId(),
+                    d.getName(),
+                    d.getVehicleType(),
+                    d.getVehicleNumber(),
+                    d.getCurrentCoordinate().getX(),
+                    d.getCurrentCoordinate().getY(),
+                    d.getCurrentZoneId(),
+                    d.getStatus(),
+                    d.getRating(),
+                    d.getTotalTripsCompleted(),
+                    d.getTotalEarnings().getAmount().toPlainString()
+            ));
+        }
+        return sw.toString();
+    }
+
+    public String exportZonesToCsv() {
+        List<Map<String, Object>> heatmap = getZoneHeatmap();
+        StringWriter sw = new StringWriter();
+        sw.write("ZoneId,Name,TrafficFactor,AvailableDrivers,QueuedRequests,DemandSupplyRatio,SurgeMultiplier\n");
+        for (Map<String, Object> z : heatmap) {
+            sw.write(String.format("%s,%s,%s,%s,%s,%s,%s\n",
+                    z.get("zoneId"),
+                    z.get("name"),
+                    z.get("trafficMultiplier"),
+                    z.get("availableDrivers"),
+                    z.get("queuedRequests"),
+                    z.get("demandSupplyRatio"),
+                    z.get("surgeMultiplier")
+            ));
+        }
+        return sw.toString();
+    }
+
+    public String exportSummaryToCsv() {
+        Map<String, Object> m = getOverviewMetrics();
+        StringWriter sw = new StringWriter();
+        sw.write("Metric,Value\n");
+        for (Map.Entry<String, Object> entry : m.entrySet()) {
+            sw.write(String.format("%s,%s\n", entry.getKey(), entry.getValue()));
+        }
+        return sw.toString();
+    }
 }

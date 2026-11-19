@@ -53,4 +53,34 @@ public class AnalyticsController {
                 .contentType(MediaType.parseMediaType("text/csv"))
                 .body(csv);
     }
+
+    @GetMapping(value = "/export/drivers", produces = "text/csv")
+    @Operation(summary = "Export complete driver operational summary as CSV")
+    public ResponseEntity<String> exportDriversCsv() {
+        String csv = analyticsService.exportDriversToCsv();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"rideflow_drivers_report.csv\"")
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(csv);
+    }
+
+    @GetMapping(value = "/export/zones", produces = "text/csv")
+    @Operation(summary = "Export zone pricing and surge statistics as CSV")
+    public ResponseEntity<String> exportZonesCsv() {
+        String csv = analyticsService.exportZonesToCsv();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"rideflow_zones_report.csv\"")
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(csv);
+    }
+
+    @GetMapping(value = "/export/summary", produces = "text/csv")
+    @Operation(summary = "Export aggregated KPI summary as CSV")
+    public ResponseEntity<String> exportSummaryCsv() {
+        String csv = analyticsService.exportSummaryToCsv();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"rideflow_kpi_summary.csv\"")
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(csv);
+    }
 }
