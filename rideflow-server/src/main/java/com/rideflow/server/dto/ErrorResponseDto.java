@@ -4,11 +4,12 @@ import java.time.LocalDateTime;
 
 public record ErrorResponseDto(
         int status,
-        String error,
+        String errorCode,
         String message,
-        LocalDateTime timestamp
+        LocalDateTime timestamp,
+        String path
 ) {
-    public static ErrorResponseDto of(int status, String error, String message) {
-        return new ErrorResponseDto(status, error, message, LocalDateTime.now());
+    public static ErrorResponseDto of(int status, String errorCode, String message, String path) {
+        return new ErrorResponseDto(status, errorCode, message, LocalDateTime.now(), path);
     }
 }

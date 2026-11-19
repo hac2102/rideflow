@@ -1,0 +1,311 @@
+/* ==========================================================================
+   RideFlow Enterprise Operations Dashboard - Modern Cyber-Dark Theme
+   ========================================================================== */
+
+.root {
+    -fx-font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    -fx-background-color: #0b0c10;
+    -fx-text-fill: #e0e6ed;
+}
+
+/* ==========================================
+   Tab Pane Styling
+   ========================================== */
+.tab-pane {
+    -fx-background-color: #0b0c10;
+    -fx-tab-min-height: 42px;
+    -fx-tab-max-height: 42px;
+}
+
+.tab-pane .tab-header-area {
+    -fx-padding: 0 10 0 10;
+    -fx-background-color: #12141d;
+    -fx-border-color: #232733;
+    -fx-border-width: 0 0 1 0;
+}
+
+.tab-pane .tab-header-background {
+    -fx-background-color: transparent;
+}
+
+.tab {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 6 6 0 0;
+    -fx-padding: 0 20 0 20;
+    -fx-cursor: hand;
+}
+
+.tab:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.04);
+}
+
+.tab:selected {
+    -fx-background-color: #181b26;
+    -fx-border-color: #00f59b;
+    -fx-border-width: 0 0 3 0;
+}
+
+.tab .tab-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #8c9ba5;
+}
+
+.tab:selected .tab-label {
+    -fx-text-fill: #ffffff;
+}
+
+/* ==========================================
+   KPI Cards
+   ========================================== */
+.kpi-card {
+    -fx-background-color: #141722;
+    -fx-background-radius: 10;
+    -fx-border-color: #232738;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-padding: 12 16 12 16;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 8, 0, 0, 4);
+}
+
+.kpi-card:hover {
+    -fx-border-color: #3b4259;
+    -fx-background-color: #181c2b;
+}
+
+.kpi-title {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #7e8b9b;
+    -fx-letter-spacing: 1px;
+}
+
+.kpi-value {
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+}
+
+/* ==========================================
+   Table View Styling
+   ========================================== */
+.table-view {
+    -fx-background-color: #12141f;
+    -fx-background-radius: 8;
+    -fx-border-color: #232738;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 2;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #181b28;
+    -fx-background-radius: 6 6 0 0;
+    -fx-border-color: #232738;
+    -fx-border-width: 0 0 1 0;
+}
+
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-size: 38px;
+    -fx-border-color: transparent;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #8f9ca8;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.table-row-cell {
+    -fx-background-color: #12141f;
+    -fx-border-color: #1a1e2b;
+    -fx-border-width: 0 0 1 0;
+    -fx-cell-size: 34px;
+    -fx-text-fill: #e1e7ec;
+    -fx-font-size: 12px;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #141724;
+}
+
+.table-row-cell:hover {
+    -fx-background-color: #1f2438;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #1d334a;
+    -fx-border-color: #00a8ff;
+    -fx-border-width: 0 0 1 0;
+}
+
+.table-row-cell:selected .text {
+    -fx-fill: #ffffff;
+    -fx-font-weight: bold;
+}
+
+/* ==========================================
+   Modern Buttons
+   ========================================== */
+.button {
+    -fx-background-radius: 6;
+    -fx-padding: 8 16 8 16;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 4, 0, 0, 2);
+}
+
+.button:hover {
+    -fx-opacity: 0.90;
+}
+
+.button:pressed {
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+
+.btn-success {
+    -fx-background-color: linear-gradient(to bottom, #00f59b, #00c878);
+    -fx-text-fill: #061e12;
+}
+
+.btn-primary {
+    -fx-background-color: linear-gradient(to bottom, #00a8ff, #0077c8);
+    -fx-text-fill: #ffffff;
+}
+
+.btn-warning {
+    -fx-background-color: linear-gradient(to bottom, #ffaa00, #d98800);
+    -fx-text-fill: #261600;
+}
+
+.btn-danger {
+    -fx-background-color: linear-gradient(to bottom, #ff4757, #d63031);
+    -fx-text-fill: #ffffff;
+}
+
+.btn-purple {
+    -fx-background-color: linear-gradient(to bottom, #9b59b6, #8e44ad);
+    -fx-text-fill: #ffffff;
+}
+
+/* ==========================================
+   Form Controls
+   ========================================== */
+.text-field {
+    -fx-background-color: #161926;
+    -fx-background-radius: 6;
+    -fx-border-color: #2b3145;
+    -fx-border-radius: 6;
+    -fx-text-fill: #ffffff;
+    -fx-padding: 7 12 7 12;
+    -fx-font-size: 12px;
+}
+
+.text-field:focused {
+    -fx-border-color: #00f59b;
+    -fx-background-color: #1a1e2e;
+}
+
+.combo-box {
+    -fx-background-color: #161926;
+    -fx-background-radius: 6;
+    -fx-border-color: #2b3145;
+    -fx-border-radius: 6;
+    -fx-cursor: hand;
+}
+
+.combo-box .cell {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #161926;
+    -fx-border-color: #2b3145;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 5);
+}
+
+.combo-box-popup .list-cell {
+    -fx-text-fill: #e0e6ed;
+    -fx-padding: 8 12 8 12;
+}
+
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: #2b3145;
+    -fx-text-fill: #00f59b;
+}
+
+/* ==========================================
+   Lists & Text Areas
+   ========================================== */
+.list-view {
+    -fx-background-color: #12141f;
+    -fx-background-radius: 8;
+    -fx-border-color: #232738;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #cbd5e1;
+    -fx-font-family: 'Consolas', monospace;
+    -fx-font-size: 11px;
+    -fx-padding: 4 8 4 8;
+}
+
+.list-cell:odd {
+    -fx-background-color: rgba(255, 255, 255, 0.015);
+}
+
+.list-cell:hover {
+    -fx-background-color: #1c2233;
+}
+
+.text-area {
+    -fx-background-color: #12141f;
+    -fx-background-radius: 8;
+    -fx-border-color: #232738;
+    -fx-border-radius: 8;
+}
+
+.text-area .content {
+    -fx-background-color: #12141f;
+    -fx-background-radius: 8;
+}
+
+.text-area .text {
+    -fx-fill: #cbd5e1;
+    -fx-font-family: 'Consolas', monospace;
+    -fx-font-size: 12px;
+}
+
+/* ==========================================
+   Custom ScrollBars
+   ========================================== */
+.scroll-bar:vertical, .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #282e42;
+    -fx-background-radius: 4;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: #3f4763;
+}
+
+.scroll-bar .track {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .increment-button, .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}

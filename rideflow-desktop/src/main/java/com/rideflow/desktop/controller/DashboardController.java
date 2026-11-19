@@ -80,7 +80,12 @@ public class DashboardController {
     }
 
     private void buildUi() {
-        rootPane.setStyle("-fx-background-color: #121216;");
+        try {
+            rootPane.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+        } catch (Exception ex) {
+            log.warn("Could not load styles.css: {}", ex.getMessage());
+        }
+        rootPane.setStyle("-fx-background-color: #0b0c10;");
 
         // Top Status Bar
         HBox topBar = createTopBar();
@@ -102,59 +107,78 @@ public class DashboardController {
     }
 
     private HBox createTopBar() {
-        HBox bar = new HBox(20);
-        bar.setPadding(new Insets(10, 15, 10, 15));
+        HBox bar = new HBox(16);
+        bar.setPadding(new Insets(12, 20, 12, 20));
         bar.setAlignment(Pos.CENTER_LEFT);
-        bar.setStyle("-fx-background-color: #1e1e24; -fx-border-color: #2e2e38; -fx-border-width: 0 0 1 0;");
+        bar.setStyle("-fx-background-color: #12141e; -fx-border-color: #232738; -fx-border-width: 0 0 1 0;");
+
+        Label brandIcon = new Label("⚡");
+        brandIcon.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
+        brandIcon.setTextFill(Color.web("#00f59b"));
 
         Label title = new Label("RideFlow");
-        title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
-        title.setTextFill(Color.web("#00e676"));
+        title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 19));
+        title.setTextFill(Color.WHITE);
 
-        Label subtitle = new Label("Transportation Operations Platform");
-        subtitle.setFont(Font.font("Segoe UI", FontWeight.NORMAL, 12));
-        subtitle.setTextFill(Color.web("#aaaaaa"));
+        Label badge = new Label("ENTERPRISE OPS");
+        badge.setStyle("-fx-background-color: rgba(0, 245, 155, 0.12); -fx-text-fill: #00f59b; -fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 3 8 3 8; -fx-background-radius: 4; -fx-border-color: rgba(0, 245, 155, 0.3); -fx-border-radius: 4;");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        lblSimClock.setFont(Font.font("Consolas", FontWeight.BOLD, 14));
-        lblSimClock.setTextFill(Color.web("#4da6ff"));
+        HBox liveIndicator = new HBox(6);
+        liveIndicator.setAlignment(Pos.CENTER_LEFT);
+        Label dot = new Label("●");
+        dot.setTextFill(Color.web("#00f59b"));
+        dot.setFont(Font.font("Segoe UI", FontWeight.BOLD, 12));
+        Label liveText = new Label("ENGINE ONLINE");
+        liveText.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10));
+        liveText.setTextFill(Color.web("#a0aec0"));
+        liveIndicator.getChildren().addAll(dot, liveText);
 
-        lblSimStatus.setStyle("-fx-background-color: #2e2e38; -fx-padding: 3 8 3 8; -fx-background-radius: 4;");
-        lblSimStatus.setTextFill(Color.YELLOW);
+        HBox clockBox = new HBox(8);
+        clockBox.setAlignment(Pos.CENTER_LEFT);
+        clockBox.setStyle("-fx-background-color: #191c2b; -fx-padding: 4 12 4 12; -fx-background-radius: 6; -fx-border-color: #2d3347; -fx-border-radius: 6;");
+        Label clockIcon = new Label("⏱");
+        clockIcon.setTextFill(Color.web("#00a8ff"));
+        lblSimClock.setFont(Font.font("Consolas", FontWeight.BOLD, 13));
+        lblSimClock.setTextFill(Color.web("#e0e6ed"));
+        clockBox.getChildren().addAll(clockIcon, lblSimClock);
 
-        bar.getChildren().addAll(title, subtitle, spacer, lblSimClock, lblSimStatus);
+        lblSimStatus.setStyle("-fx-background-color: #1f2733; -fx-padding: 4 12 4 12; -fx-background-radius: 6; -fx-border-color: #3b4b60; -fx-border-radius: 6; -fx-font-weight: bold; -fx-font-size: 11px;");
+        lblSimStatus.setTextFill(Color.web("#ffaa00"));
+
+        bar.getChildren().addAll(brandIcon, title, badge, spacer, liveIndicator, clockBox, lblSimStatus);
         return bar;
     }
 
     // Screen 1: Operations Overview
     private Node createOverviewScreen() {
-        VBox v = new VBox(15);
-        v.setPadding(new Insets(15));
+        VBox v = new VBox(18);
+        v.setPadding(new Insets(18));
 
         // KPI Cards Row
-        HBox kpiRow = new HBox(15);
+        HBox kpiRow = new HBox(12);
         kpiRow.getChildren().addAll(
-                createKpiCard("TOTAL DRIVERS", lblFleetTotal, "#4da6ff"),
-                createKpiCard("AVAILABLE", lblAvailable, "#00e676"),
-                createKpiCard("BUSY ON TRIPS", lblBusy, "#ff9100"),
-                createKpiCard("QUEUED RIDES", lblQueued, "#ffcc00"),
-                createKpiCard("ACTIVE TRIPS", lblActive, "#2979ff"),
-                createKpiCard("COMPLETED", lblCompleted, "#00e676"),
-                createKpiCard("SIM REVENUE", lblRevenue, "#00e676"),
-                createKpiCard("AVG SURGE", lblAvgSurge, "#ff4d4d")
+                createKpiCard("TOTAL DRIVERS", lblFleetTotal, "#00a8ff"),
+                createKpiCard("AVAILABLE", lblAvailable, "#00f59b"),
+                createKpiCard("BUSY ON TRIPS", lblBusy, "#ffaa00"),
+                createKpiCard("QUEUED RIDES", lblQueued, "#ff4757"),
+                createKpiCard("ACTIVE TRIPS", lblActive, "#00c8ff"),
+                createKpiCard("COMPLETED", lblCompleted, "#a55eea"),
+                createKpiCard("SIM REVENUE", lblRevenue, "#00f59b"),
+                createKpiCard("AVG SURGE", lblAvgSurge, "#ff7675")
         );
 
         // Event Feed Section
-        VBox eventBox = new VBox(8);
-        Label lblEventsTitle = new Label("Live Simulation Event Feed");
+        VBox eventBox = new VBox(10);
+        Label lblEventsTitle = new Label("Live Simulation Event Feed (Real-Time Telemetry)");
         lblEventsTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
         lblEventsTitle.setTextFill(Color.WHITE);
 
-        eventFeedView.setStyle("-fx-control-inner-background: #1e1e24; -fx-font-family: 'Consolas'; -fx-text-fill: #e0e0e0;");
         VBox.setVgrow(eventFeedView, Priority.ALWAYS);
         eventBox.getChildren().addAll(lblEventsTitle, eventFeedView);
+        VBox.setVgrow(eventBox, Priority.ALWAYS);
 
         v.getChildren().addAll(kpiRow, eventBox);
         return v;
@@ -162,30 +186,30 @@ public class DashboardController {
 
     // Screen 2: Interactive City Simulator
     private Node createCitySimulatorScreen() {
-        HBox h = new HBox(15);
-        h.setPadding(new Insets(15));
+        HBox h = new HBox(16);
+        h.setPadding(new Insets(16));
 
         cityCanvas = new CityCanvasView(620, 620);
         cityCanvas.setSelectionListener(this::onEntitySelected);
 
-        VBox sidePanel = new VBox(12);
+        VBox sidePanel = new VBox(14);
         sidePanel.setPrefWidth(320);
 
         Label lblLegendTitle = new Label("Visual Topology Legend");
         lblLegendTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
         lblLegendTitle.setTextFill(Color.WHITE);
 
-        VBox legendBox = new VBox(6);
-        legendBox.setPadding(new Insets(10));
-        legendBox.setStyle("-fx-background-color: #1e1e24; -fx-border-color: #2e2e38; -fx-border-radius: 4;");
+        VBox legendBox = new VBox(8);
+        legendBox.setPadding(new Insets(12));
+        legendBox.getStyleClass().add("kpi-card");
         legendBox.getChildren().addAll(
-                createLegendItem("● Green Dot", "Available Driver (Ready for dispatch)", "#00e676"),
-                createLegendItem("● Orange Dot", "Reserved Driver (En route to pickup)", "#ff9100"),
-                createLegendItem("● Blue Dot", "On-Trip Driver (Passenger on board)", "#2979ff"),
-                createLegendItem("● Gray Dot", "Offline Driver (Off-duty)", "#757575"),
-                createLegendItem("● Yellow Diamond", "Queued Ride Request", "#ffcc00"),
-                createLegendItem("— Blue Line", "Active Journey Route Vector", "#4da6ff"),
-                createLegendItem("■ Red/Orange Tint", "Dynamic Surge Zone (High Demand)", "#ff4d4d")
+                createLegendItem("● Green Dot", "Available Driver (Ready for dispatch)", "#00f59b"),
+                createLegendItem("● Orange Dot", "Reserved Driver (En route to pickup)", "#ffaa00"),
+                createLegendItem("● Blue Dot", "On-Trip Driver (Passenger on board)", "#00a8ff"),
+                createLegendItem("● Gray Dot", "Offline Driver (Off-duty)", "#718096"),
+                createLegendItem("◆ Amber Diamond", "Queued Ride Request (Awaiting match)", "#ffcc00"),
+                createLegendItem("— Cyan Glow Vector", "Active Journey Route Vector", "#00c8ff"),
+                createLegendItem("■ Red / Coral Tint", "Dynamic Surge Zone (High Demand)", "#ff4757")
         );
 
         Label lblInspTitle = new Label("Selected Entity Details");
@@ -193,9 +217,9 @@ public class DashboardController {
         lblInspTitle.setTextFill(Color.WHITE);
 
         lblInspector.setWrapText(true);
-        lblInspector.setPadding(new Insets(10));
-        lblInspector.setStyle("-fx-background-color: #1e1e24; -fx-text-fill: #00e676; -fx-font-family: 'Consolas';");
-        lblInspector.setPrefHeight(200);
+        lblInspector.setPadding(new Insets(12));
+        lblInspector.setStyle("-fx-background-color: #12141f; -fx-text-fill: #00f59b; -fx-font-family: 'Consolas', monospace; -fx-border-color: #232738; -fx-border-radius: 8; -fx-background-radius: 8;");
+        lblInspector.setPrefHeight(220);
 
         sidePanel.getChildren().addAll(lblLegendTitle, legendBox, lblInspTitle, lblInspector);
         h.getChildren().addAll(cityCanvas, sidePanel);
@@ -204,18 +228,18 @@ public class DashboardController {
 
     // Screen 3: Dispatch Control Center
     private Node createDispatchScreen() {
-        VBox v = new VBox(12);
-        v.setPadding(new Insets(15));
+        VBox v = new VBox(14);
+        v.setPadding(new Insets(16));
 
-        HBox controls = new HBox(10);
+        HBox controls = new HBox(12);
         controls.setAlignment(Pos.CENTER_LEFT);
 
         Button btnCreateRide = new Button("+ Create Ride Request");
-        btnCreateRide.setStyle("-fx-background-color: #00e676; -fx-text-fill: black; -fx-font-weight: bold;");
+        btnCreateRide.getStyleClass().addAll("button", "btn-success");
         btnCreateRide.setOnAction(e -> showCreateRideDialog());
 
         Button btnDispatchNow = new Button("⚡ Trigger Instant Dispatch Pass");
-        btnDispatchNow.setStyle("-fx-background-color: #2979ff; -fx-text-fill: white; -fx-font-weight: bold;");
+        btnDispatchNow.getStyleClass().addAll("button", "btn-primary");
         btnDispatchNow.setOnAction(e -> apiClient.triggerTickAsync().thenAccept(res -> Platform.runLater(this::refreshData)));
 
         controls.getChildren().addAll(btnCreateRide, btnDispatchNow);
@@ -227,8 +251,7 @@ public class DashboardController {
         lblExplTitle.setTextFill(Color.WHITE);
 
         txtDispatchExplanation.setEditable(false);
-        txtDispatchExplanation.setPrefHeight(120);
-        txtDispatchExplanation.setStyle("-fx-control-inner-background: #1e1e24; -fx-font-family: 'Consolas'; -fx-text-fill: #e0e0e0;");
+        txtDispatchExplanation.setPrefHeight(130);
 
         queuedTable.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> {
             if (newV != null && newV.containsKey("requestId")) {
@@ -270,16 +293,18 @@ public class DashboardController {
 
     // Screen 5: Fleet & Driver Management
     private Node createDriverManagementScreen() {
-        VBox v = new VBox(12);
-        v.setPadding(new Insets(15));
+        VBox v = new VBox(14);
+        v.setPadding(new Insets(16));
 
-        HBox topActions = new HBox(10);
+        HBox topActions = new HBox(12);
+        topActions.setAlignment(Pos.CENTER_LEFT);
+
         Button btnAddDriver = new Button("+ Register New Driver");
-        btnAddDriver.setStyle("-fx-background-color: #00e676; -fx-text-fill: black; -fx-font-weight: bold;");
+        btnAddDriver.getStyleClass().addAll("button", "btn-success");
         btnAddDriver.setOnAction(e -> showRegisterDriverDialog());
 
-        Button btnToggleOnline = new Button("Toggle Online / Offline");
-        btnToggleOnline.setStyle("-fx-background-color: #ff9100; -fx-text-fill: black; -fx-font-weight: bold;");
+        Button btnToggleOnline = new Button("⚡ Toggle Online / Offline");
+        btnToggleOnline.getStyleClass().addAll("button", "btn-warning");
         btnToggleOnline.setOnAction(e -> {
             Map<String, Object> sel = driverTable.getSelectionModel().getSelectedItem();
             if (sel != null) {
@@ -300,8 +325,8 @@ public class DashboardController {
 
     // Screen 6: Simulation Controls & Analytics
     private Node createSimulationScreen() {
-        VBox v = new VBox(15);
-        v.setPadding(new Insets(15));
+        VBox v = new VBox(16);
+        v.setPadding(new Insets(16));
 
         Label title = new Label("Simulation Clock & Workload Controls");
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 15));
@@ -311,26 +336,34 @@ public class DashboardController {
         controls.setAlignment(Pos.CENTER_LEFT);
 
         Button btnStart = new Button("▶ Start Continuous Simulation");
-        btnStart.setStyle("-fx-background-color: #00e676; -fx-text-fill: black; -fx-font-weight: bold;");
+        btnStart.getStyleClass().addAll("button", "btn-success");
         btnStart.setOnAction(e -> apiClient.startSimulationAsync().thenAccept(r -> Platform.runLater(this::refreshData)));
 
         Button btnPause = new Button("⏸ Pause");
-        btnPause.setStyle("-fx-background-color: #ff9100; -fx-text-fill: black; -fx-font-weight: bold;");
+        btnPause.getStyleClass().addAll("button", "btn-warning");
         btnPause.setOnAction(e -> apiClient.pauseSimulationAsync().thenAccept(r -> Platform.runLater(this::refreshData)));
 
         Button btnStep = new Button("⏭ Step 1 Tick (1 Minute)");
-        btnStep.setStyle("-fx-background-color: #2979ff; -fx-text-fill: white; -fx-font-weight: bold;");
+        btnStep.getStyleClass().addAll("button", "btn-primary");
         btnStep.setOnAction(e -> apiClient.triggerTickAsync().thenAccept(r -> Platform.runLater(this::refreshData)));
+
+        Label lblScen = new Label("Scenario:");
+        lblScen.setTextFill(Color.web("#a0aec0"));
+        lblScen.setFont(Font.font("Segoe UI", FontWeight.BOLD, 12));
 
         ComboBox<String> cbScenario = new ComboBox<>();
         cbScenario.getItems().addAll("NORMAL", "RUSH_HOUR", "LOW_SUPPLY", "HIGH_DEMAND", "BALANCED_MARKET");
         cbScenario.setValue("NORMAL");
 
-        TextField txtSeed = new TextField("42");
-        txtSeed.setPrefWidth(70);
+        Label lblSd = new Label("Seed:");
+        lblSd.setTextFill(Color.web("#a0aec0"));
+        lblSd.setFont(Font.font("Segoe UI", FontWeight.BOLD, 12));
 
-        Button btnReset = new Button("🔄 Reset Scenario");
-        btnReset.setStyle("-fx-background-color: #ff5252; -fx-text-fill: white; -fx-font-weight: bold;");
+        TextField txtSeed = new TextField("42");
+        txtSeed.setPrefWidth(60);
+
+        Button btnReset = new Button("🔄 Reset");
+        btnReset.getStyleClass().addAll("button", "btn-danger");
         btnReset.setOnAction(e -> {
             long seed = 42L;
             try { seed = Long.parseLong(txtSeed.getText().trim()); } catch (Exception ignored) {}
@@ -338,10 +371,10 @@ public class DashboardController {
         });
 
         Button btnExportCsv = new Button("📥 Export Ride Data (CSV)");
-        btnExportCsv.setStyle("-fx-background-color: #9c27b0; -fx-text-fill: white; -fx-font-weight: bold;");
+        btnExportCsv.getStyleClass().addAll("button", "btn-purple");
         btnExportCsv.setOnAction(e -> handleExportCsv());
 
-        controls.getChildren().addAll(btnStart, btnPause, btnStep, new Label("Scenario:"), cbScenario, new Label("Seed:"), txtSeed, btnReset, btnExportCsv);
+        controls.getChildren().addAll(btnStart, btnPause, btnStep, lblScen, cbScenario, lblSd, txtSeed, btnReset, btnExportCsv);
 
         v.getChildren().addAll(title, controls);
         return v;
@@ -626,46 +659,72 @@ public class DashboardController {
             long avail = ((Number) z.get("availableDrivers")).longValue();
             long queued = ((Number) z.get("queuedRequests")).longValue();
 
-            VBox cell = new VBox(3);
-            cell.setPadding(new Insets(8));
-            cell.setPrefSize(140, 85);
+            VBox cell = new VBox(4);
+            cell.setPadding(new Insets(10));
+            cell.setPrefSize(145, 92);
             cell.setAlignment(Pos.CENTER);
 
-            String bgColor = "#1e1e24";
-            if (surge > 1.8) bgColor = "#5c1d1d";
-            else if (surge > 1.3) bgColor = "#5c3d1d";
-            else if (surge > 1.0) bgColor = "#2e3b2e";
+            String borderColor = "#232738";
+            String bgColor = "#141724";
+            String surgeTextColor = "#00f59b";
 
-            cell.setStyle("-fx-background-color: " + bgColor + "; -fx-border-color: #3e3e48; -fx-border-radius: 4;");
+            if (surge > 1.8) {
+                bgColor = "#3d131a";
+                borderColor = "#ff4757";
+                surgeTextColor = "#ff4757";
+            } else if (surge > 1.3) {
+                bgColor = "#352410";
+                borderColor = "#ffaa00";
+                surgeTextColor = "#ffaa00";
+            } else if (surge > 1.0) {
+                bgColor = "#18261e";
+                borderColor = "#00f59b";
+                surgeTextColor = "#00f59b";
+            }
 
-            Label lblZ = new Label("Zone " + zoneId);
-            lblZ.setFont(Font.font("Segoe UI", FontWeight.BOLD, 12));
-            lblZ.setTextFill(Color.WHITE);
+            cell.setStyle(String.format(
+                    "-fx-background-color: %s; -fx-border-color: %s; -fx-border-radius: 8; -fx-background-radius: 8; -fx-border-width: 1.2;",
+                    bgColor, borderColor
+            ));
 
-            Label lblSurge = new Label(String.format("Surge: %.2fx", surge));
+            HBox cellHeader = new HBox(8);
+            cellHeader.setAlignment(Pos.CENTER);
+            Label lblZ = new Label("ZONE " + zoneId);
+            lblZ.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11));
+            lblZ.setTextFill(Color.web("#a0aec0"));
+
+            Label lblSurge = new Label(String.format("%.2fx", surge));
             lblSurge.setFont(Font.font("Segoe UI", FontWeight.BOLD, 12));
-            lblSurge.setTextFill(surge > 1.0 ? Color.web("#ffcc00") : Color.web("#00e676"));
+            lblSurge.setTextFill(Color.web(surgeTextColor));
+            cellHeader.getChildren().addAll(lblZ, lblSurge);
 
-            Label lblDS = new Label(String.format("Demand: %d | Supply: %d", queued, avail));
+            Label lblDS = new Label(String.format("Demand: %d  |  Supply: %d", queued, avail));
             lblDS.setFont(Font.font("Segoe UI", FontWeight.NORMAL, 10));
-            lblDS.setTextFill(Color.web("#aaaaaa"));
+            lblDS.setTextFill(Color.web("#cbd5e1"));
 
-            cell.getChildren().addAll(lblZ, lblSurge, lblDS);
+            // Mini balance bar
+            ProgressBar balanceBar = new ProgressBar();
+            balanceBar.setPrefWidth(120);
+            balanceBar.setPrefHeight(4);
+            double ratio = (queued + avail) == 0 ? 0.5 : (double) avail / (queued + avail);
+            balanceBar.setProgress(ratio);
+            balanceBar.setStyle("-fx-accent: " + surgeTextColor + ";");
+
+            cell.getChildren().addAll(cellHeader, lblDS, balanceBar);
             heatmapGrid.add(cell, col, row);
         }
     }
 
     private VBox createKpiCard(String title, Label valLabel, String accentColor) {
-        VBox box = new VBox(5);
-        box.setPadding(new Insets(10, 15, 10, 15));
-        box.setPrefWidth(135);
-        box.setStyle("-fx-background-color: #1e1e24; -fx-border-color: #2e2e38; -fx-border-radius: 6; -fx-background-radius: 6;");
+        VBox box = new VBox(6);
+        box.setPadding(new Insets(12, 16, 12, 16));
+        box.setPrefWidth(140);
+        box.getStyleClass().add("kpi-card");
 
         Label t = new Label(title);
-        t.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10));
-        t.setTextFill(Color.web("#888899"));
+        t.getStyleClass().add("kpi-title");
 
-        valLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
+        valLabel.getStyleClass().add("kpi-value");
         valLabel.setTextFill(Color.web(accentColor));
 
         box.getChildren().addAll(t, valLabel);
@@ -680,7 +739,7 @@ public class DashboardController {
         s.setFont(Font.font("Segoe UI", FontWeight.BOLD, 12));
 
         Label t = new Label(text);
-        t.setTextFill(Color.web("#cccccc"));
+        t.setTextFill(Color.web("#cbd5e1"));
         t.setFont(Font.font("Segoe UI", FontWeight.NORMAL, 11));
 
         h.getChildren().addAll(s, t);

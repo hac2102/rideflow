@@ -32,7 +32,7 @@ rideflow:
     auto-start: false
     default-seed: 42
   dispatch:
-    pickup-radius-km: 15.0
+    pickup-radius-km: 10.0
     strategy: WEIGHTED_FAIR # WEIGHTED_FAIR or NEAREST
 
 ---

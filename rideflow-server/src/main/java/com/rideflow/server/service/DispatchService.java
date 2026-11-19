@@ -67,7 +67,7 @@ public class DispatchService {
         this.zoneDao = zoneDao;
         this.distanceCalculator = new EuclideanRoadDistanceCalculator();
         this.dispatchStrategy = new WeightedFairDispatchStrategy();
-        this.maxPickupRadiusKm = 15.0; // 15 km maximum dispatch radius
+        this.maxPickupRadiusKm = 10.0; // 10 km maximum dispatch radius matching report Section 3.4(A)
     }
 
     /**
