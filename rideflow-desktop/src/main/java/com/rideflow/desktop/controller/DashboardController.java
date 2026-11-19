@@ -108,7 +108,7 @@ public class DashboardController {
 
     private HBox createTopBar() {
         HBox bar = new HBox(16);
-        bar.setPadding(new Insets(12, 20, 12, 20));
+        bar.setPadding(new Insets(10, 18, 10, 18));
         bar.setAlignment(Pos.CENTER_LEFT);
         bar.setStyle("-fx-background-color: #12141e; -fx-border-color: #232738; -fx-border-width: 0 0 1 0;");
 
@@ -120,22 +120,52 @@ public class DashboardController {
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 19));
         title.setTextFill(Color.WHITE);
 
-        Label badge = new Label("ENTERPRISE OPS");
+        Label badge = new Label("LIVE OPS SIMULATOR");
         badge.setStyle("-fx-background-color: rgba(0, 245, 155, 0.12); -fx-text-fill: #00f59b; -fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 3 8 3 8; -fx-background-radius: 4; -fx-border-color: rgba(0, 245, 155, 0.3); -fx-border-radius: 4;");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox liveIndicator = new HBox(6);
-        liveIndicator.setAlignment(Pos.CENTER_LEFT);
-        Label dot = new Label("●");
-        dot.setTextFill(Color.web("#00f59b"));
-        dot.setFont(Font.font("Segoe UI", FontWeight.BOLD, 12));
-        Label liveText = new Label("ENGINE ONLINE");
-        liveText.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10));
-        liveText.setTextFill(Color.web("#a0aec0"));
-        liveIndicator.getChildren().addAll(dot, liveText);
+        // Simulation Continuous Play/Pause Button
+        Button btnSimToggle = new Button("▶ START AUTO-SIM");
+        btnSimToggle.getStyleClass().addAll("button", "btn-success");
+        btnSimToggle.setOnAction(e -> {
+            if ("RUNNING".equalsIgnoreCase(lblSimStatus.getText())) {
+                apiClient.pauseSimulationAsync().thenAccept(r -> Platform.runLater(() -> {
+                    btnSimToggle.setText("▶ RESUME AUTO-SIM");
+                    btnSimToggle.getStyleClass().removeAll("btn-warning");
+                    btnSimToggle.getStyleClass().add("btn-success");
+                    refreshData();
+                }));
+            } else {
+                apiClient.startSimulationAsync().thenAccept(r -> Platform.runLater(() -> {
+                    btnSimToggle.setText("⏸ PAUSE");
+                    btnSimToggle.getStyleClass().removeAll("btn-success");
+                    btnSimToggle.getStyleClass().add("btn-warning");
+                    refreshData();
+                }));
+            }
+        });
 
+        // Speed Selector
+        HBox speedGroup = new HBox(4);
+        speedGroup.setAlignment(Pos.CENTER_LEFT);
+        Label lblSpd = new Label("SPEED:");
+        lblSpd.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10));
+        lblSpd.setTextFill(Color.web("#a0aec0"));
+
+        Button btnSpd1 = new Button("1x");
+        Button btnSpd2 = new Button("2x");
+        Button btnSpd5 = new Button("5x");
+        for (Button b : List.of(btnSpd1, btnSpd2, btnSpd5)) {
+            b.setStyle("-fx-background-color: #1a1e2e; -fx-text-fill: #e0e6ed; -fx-padding: 4 8 4 8; -fx-font-size: 11px; -fx-font-weight: bold; -fx-cursor: hand; -fx-border-color: #2b3145; -fx-border-radius: 4; -fx-background-radius: 4;");
+        }
+        btnSpd1.setOnAction(e -> apiClient.setSpeedAsync(1.0));
+        btnSpd2.setOnAction(e -> apiClient.setSpeedAsync(2.0));
+        btnSpd5.setOnAction(e -> apiClient.setSpeedAsync(5.0));
+        speedGroup.getChildren().addAll(lblSpd, btnSpd1, btnSpd2, btnSpd5);
+
+        // Clock Pill
         HBox clockBox = new HBox(8);
         clockBox.setAlignment(Pos.CENTER_LEFT);
         clockBox.setStyle("-fx-background-color: #191c2b; -fx-padding: 4 12 4 12; -fx-background-radius: 6; -fx-border-color: #2d3347; -fx-border-radius: 6;");
@@ -145,10 +175,11 @@ public class DashboardController {
         lblSimClock.setTextFill(Color.web("#e0e6ed"));
         clockBox.getChildren().addAll(clockIcon, lblSimClock);
 
+        // Status Pill
         lblSimStatus.setStyle("-fx-background-color: #1f2733; -fx-padding: 4 12 4 12; -fx-background-radius: 6; -fx-border-color: #3b4b60; -fx-border-radius: 6; -fx-font-weight: bold; -fx-font-size: 11px;");
         lblSimStatus.setTextFill(Color.web("#ffaa00"));
 
-        bar.getChildren().addAll(brandIcon, title, badge, spacer, liveIndicator, clockBox, lblSimStatus);
+        bar.getChildren().addAll(brandIcon, title, badge, spacer, btnSimToggle, speedGroup, clockBox, lblSimStatus);
         return bar;
     }
 
@@ -217,11 +248,37 @@ public class DashboardController {
         lblInspTitle.setTextFill(Color.WHITE);
 
         lblInspector.setWrapText(true);
-        lblInspector.setPadding(new Insets(12));
+        lblInspector.setPadding(new Insets(10));
         lblInspector.setStyle("-fx-background-color: #12141f; -fx-text-fill: #00f59b; -fx-font-family: 'Consolas', monospace; -fx-border-color: #232738; -fx-border-radius: 8; -fx-background-radius: 8;");
-        lblInspector.setPrefHeight(220);
+        lblInspector.setPrefHeight(130);
 
-        sidePanel.getChildren().addAll(lblLegendTitle, legendBox, lblInspTitle, lblInspector);
+        // 1-Click Interactive Live Scenarios Toolbar
+        Label lblShockTitle = new Label("⚡ 1-Click Interactive Scenarios");
+        lblShockTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+        lblShockTitle.setTextFill(Color.WHITE);
+
+        VBox shockBox = new VBox(6);
+        shockBox.getStyleClass().add("kpi-card");
+        shockBox.setPadding(new Insets(10));
+
+        Button btnRush = new Button("⚡ Rush Hour Shock (CBD Zone 13)");
+        btnRush.getStyleClass().addAll("button", "btn-warning");
+        btnRush.setMaxWidth(Double.MAX_VALUE);
+        btnRush.setOnAction(e -> apiClient.injectRushHourAsync(13, 12).thenAccept(r -> Platform.runLater(this::refreshData)));
+
+        Button btnRain = new Button("🌧 Rainstorm City-Wide Demand");
+        btnRain.getStyleClass().addAll("button", "btn-danger");
+        btnRain.setMaxWidth(Double.MAX_VALUE);
+        btnRain.setOnAction(e -> apiClient.injectRainstormAsync().thenAccept(r -> Platform.runLater(this::refreshData)));
+
+        Button btnMob = new Button("🚗 Mobilize 10 Reserve Drivers");
+        btnMob.getStyleClass().addAll("button", "btn-success");
+        btnMob.setMaxWidth(Double.MAX_VALUE);
+        btnMob.setOnAction(e -> apiClient.mobilizeFleetAsync(13, 10).thenAccept(r -> Platform.runLater(this::refreshData)));
+
+        shockBox.getChildren().addAll(btnRush, btnRain, btnMob);
+
+        sidePanel.getChildren().addAll(lblLegendTitle, legendBox, lblInspTitle, lblInspector, lblShockTitle, shockBox);
         h.getChildren().addAll(cityCanvas, sidePanel);
         return h;
     }
@@ -587,14 +644,17 @@ public class DashboardController {
     }
 
     private void startPolling() {
-        // Poll every 1000ms
+        // Auto-start continuous simulation immediately on app launch
+        apiClient.startSimulationAsync().thenAccept(r -> log.info("Auto-started live simulation engine"));
+
+        // Poll every 600ms for continuous silky-smooth updates
         scheduler.scheduleAtFixedRate(() -> {
             try {
                 refreshData();
             } catch (Exception e) {
                 log.debug("Polling attempt failed: {}", e.getMessage());
             }
-        }, 500, 1000, TimeUnit.MILLISECONDS);
+        }, 500, 600, TimeUnit.MILLISECONDS);
     }
 
     private void refreshData() {

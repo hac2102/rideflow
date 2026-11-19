@@ -36,6 +36,10 @@ public class SimulationClock {
         return status;
     }
 
+    public boolean isRunning() {
+        return status == SimulationStatus.RUNNING;
+    }
+
     public void start() {
         this.status = SimulationStatus.RUNNING;
     }

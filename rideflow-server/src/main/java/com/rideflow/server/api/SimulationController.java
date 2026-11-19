@@ -82,6 +82,36 @@ public class SimulationController {
         return ResponseEntity.ok(getSimulationState());
     }
 
+    @PostMapping("/speed")
+    @Operation(summary = "Set simulation speed multiplier (e.g. 0.5, 1.0, 2.0, 5.0)")
+    public ResponseEntity<Void> setSpeed(@RequestParam(defaultValue = "1.0") double multiplier) {
+        simulationService.setTickSpeed(multiplier);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/inject/rush-hour")
+    @Operation(summary = "Inject sudden high-demand rush hour shock in a specific zone")
+    public ResponseEntity<Void> injectRushHour(@RequestParam(defaultValue = "13") int zoneId,
+                                               @RequestParam(defaultValue = "12") int count) {
+        simulationService.injectRushHour(zoneId, count);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/inject/rainstorm")
+    @Operation(summary = "Inject sudden city-wide rainstorm demand shock across all zones")
+    public ResponseEntity<Void> injectRainstorm() {
+        simulationService.injectRainstorm();
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/inject/mobilize-fleet")
+    @Operation(summary = "Mobilize reserve drivers to quench high surge in a zone")
+    public ResponseEntity<Void> mobilizeFleet(@RequestParam(defaultValue = "8") int count,
+                                              @RequestParam(defaultValue = "13") int zoneId) {
+        simulationService.mobilizeFleet(count, zoneId);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/events")
     @Operation(summary = "Get chronological stream of latest simulation events")
     public List<SimulationEvent> getLatestEvents(@RequestParam(defaultValue = "50") int limit) {

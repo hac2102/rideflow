@@ -213,4 +213,20 @@ public class BackendApiClient {
     public CompletableFuture<List<Map<String, Object>>> getCandidateEvaluationAsync(long requestId) {
         return getAsync("/api/v1/analytics/dispatch/" + requestId, new TypeReference<>() {});
     }
+
+    public CompletableFuture<Void> setSpeedAsync(double multiplier) {
+        return postAsync("/api/v1/simulation/speed?multiplier=" + multiplier, null, null);
+    }
+
+    public CompletableFuture<Void> injectRushHourAsync(int zoneId, int count) {
+        return postAsync("/api/v1/simulation/inject/rush-hour?zoneId=" + zoneId + "&count=" + count, null, null);
+    }
+
+    public CompletableFuture<Void> injectRainstormAsync() {
+        return postAsync("/api/v1/simulation/inject/rainstorm", null, null);
+    }
+
+    public CompletableFuture<Void> mobilizeFleetAsync(int zoneId, int count) {
+        return postAsync("/api/v1/simulation/inject/mobilize-fleet?zoneId=" + zoneId + "&count=" + count, null, null);
+    }
 }

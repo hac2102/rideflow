@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
@@ -44,6 +44,11 @@ public class SimulationService {
 
     // Active trip progress models tracked in memory across ticks
     private final Map<Long, ActiveTripProgress> activeTripProgressMap = new ConcurrentHashMap<>();
+
+    // Automated Continuous Tick Scheduler
+    private final ScheduledExecutorService autoTickExecutor = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledFuture<?> autoTickTask = null;
+    private volatile long tickIntervalMs = 1000;
 
     public SimulationService(SimulationRunDao simulationRunDao,
                              SimulationEventDao simulationEventDao,
@@ -212,28 +217,109 @@ public class SimulationService {
         simulationRunDao.update(run);
     }
 
-    public void start() {
+    public synchronized void start() {
         clock.start();
         SimulationRun run = getCurrentRun();
         run.setStatus(SimulationStatus.RUNNING);
         simulationRunDao.update(run);
+        startAutoTick();
     }
 
-    public void pause() {
+    public synchronized void pause() {
         clock.pause();
         SimulationRun run = getCurrentRun();
         run.setStatus(SimulationStatus.PAUSED);
         simulationRunDao.update(run);
+        stopAutoTick();
     }
 
-    public void resume() {
+    public synchronized void resume() {
         clock.resume();
         SimulationRun run = getCurrentRun();
         run.setStatus(SimulationStatus.RUNNING);
         simulationRunDao.update(run);
+        startAutoTick();
+    }
+
+    public synchronized void setTickSpeed(double speedMultiplier) {
+        this.tickIntervalMs = Math.max(100, Math.min(5000, (long) (1000.0 / Math.max(0.1, speedMultiplier))));
+        if (clock.isRunning()) {
+            startAutoTick();
+        }
+    }
+
+    public long getTickIntervalMs() {
+        return tickIntervalMs;
+    }
+
+    private synchronized void startAutoTick() {
+        stopAutoTick();
+        autoTickTask = autoTickExecutor.scheduleWithFixedDelay(() -> {
+            try {
+                if (clock.isRunning()) {
+                    advanceOneTick();
+                }
+            } catch (Exception ex) {
+                log.error("Error during auto-tick execution", ex);
+            }
+        }, tickIntervalMs, tickIntervalMs, TimeUnit.MILLISECONDS);
+        log.info("Auto-tick execution active with interval {} ms", tickIntervalMs);
+    }
+
+    private synchronized void stopAutoTick() {
+        if (autoTickTask != null && !autoTickTask.isCancelled()) {
+            autoTickTask.cancel(false);
+            autoTickTask = null;
+        }
+    }
+
+    // 1-Click Interactive Shock Scenarios
+    public synchronized void injectRushHour(int zoneId, int requestCount) {
+        long runId = getCurrentRun().getRunId();
+        Random rng = new Random();
+        for (int i = 0; i < requestCount; i++) {
+            int row = (zoneId - 1) / 5;
+            int col = (zoneId - 1) % 5;
+            double px = col * 20.0 + 2.0 + rng.nextDouble() * 16.0;
+            double py = row * 20.0 + 2.0 + rng.nextDouble() * 16.0;
+            double dx = rng.nextDouble() * 100.0;
+            double dy = rng.nextDouble() * 100.0;
+            rideLifecycleService.createAndQueueRide(100L + i, new Coordinate(px, py), new Coordinate(dx, dy), com.rideflow.core.enums.RequestType.STANDARD, runId);
+        }
+        log.info("Injected Rush Hour spike with {} requests in Zone {}", requestCount, zoneId);
+    }
+
+    public synchronized void injectRainstorm() {
+        long runId = getCurrentRun().getRunId();
+        Random rng = new Random();
+        for (int z = 1; z <= 25; z++) {
+            int row = (z - 1) / 5;
+            int col = (z - 1) % 5;
+            double px = col * 20.0 + 2.0 + rng.nextDouble() * 16.0;
+            double py = row * 20.0 + 2.0 + rng.nextDouble() * 16.0;
+            double dx = rng.nextDouble() * 100.0;
+            double dy = rng.nextDouble() * 100.0;
+            rideLifecycleService.createAndQueueRide(200L + z, new Coordinate(px, py), new Coordinate(dx, dy), com.rideflow.core.enums.RequestType.STANDARD, runId);
+        }
+        log.info("Injected Rainstorm city-wide demand shock");
+    }
+
+    public synchronized void mobilizeFleet(int count, int zoneId) {
+        Random rng = new Random();
+        int row = (zoneId - 1) / 5;
+        int col = (zoneId - 1) % 5;
+        for (int i = 0; i < count; i++) {
+            double x = col * 20.0 + 2.0 + rng.nextDouble() * 16.0;
+            double y = row * 20.0 + 2.0 + rng.nextDouble() * 16.0;
+            Driver d = new Driver(null, "Reserve Driver #" + (500 + i), com.rideflow.core.enums.VehicleType.SEDAN,
+                    "KA-01-MOB-" + (1000 + rng.nextInt(9000)), new Coordinate(x, y), zoneId);
+            driverDao.save(d);
+        }
+        log.info("Mobilized {} reserve drivers to Zone {}", count, zoneId);
     }
 
     public void reset(String scenarioName, long seed) {
+        stopAutoTick();
         initializeRun(scenarioName, seed);
     }
 
