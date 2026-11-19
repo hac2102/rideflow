@@ -54,7 +54,7 @@ public class DemandGenerator {
 
         for (int i = 0; i < count; i++) {
             long requestId = startingRequestId + i;
-            long riderId = defaultRiderIdBase + (requestId % 100);
+            long riderId = 1L + (Math.abs(requestId) % 5);
 
             Coordinate pickup = generateCoordinate(scenario.isDowntownSurgeBias());
             Coordinate destination = generateCoordinate(false);

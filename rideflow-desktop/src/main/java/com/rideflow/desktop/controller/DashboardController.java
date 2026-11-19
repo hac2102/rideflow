@@ -357,10 +357,11 @@ public class DashboardController {
         );
 
         // Center Split: City Preview on Left + Live Event Feed on Right
-        HBox centerSplit = new HBox(14);
+        HBox centerSplit = new HBox(16);
 
         VBox leftMapBox = new VBox(8);
-        HBox.setHgrow(leftMapBox, Priority.ALWAYS);
+        leftMapBox.setMinWidth(480);
+        leftMapBox.setMaxWidth(480);
         Label lblMapTitle = new Label("Live City Operations Topology (Real-Time Kinematics)");
         lblMapTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
         lblMapTitle.setTextFill(Color.WHITE);
@@ -370,12 +371,15 @@ public class DashboardController {
         leftMapBox.getChildren().addAll(lblMapTitle, overviewCanvas);
 
         VBox rightFeedBox = new VBox(8);
-        rightFeedBox.setPrefWidth(380);
+        HBox.setHgrow(rightFeedBox, Priority.ALWAYS);
+        rightFeedBox.setMinWidth(400);
         Label lblFeedTitle = new Label("Live Simulation Event Feed (Real-Time Telemetry)");
         lblFeedTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
         lblFeedTitle.setTextFill(Color.WHITE);
 
         eventFeedView.setPrefHeight(480);
+        eventFeedView.setMaxWidth(Double.MAX_VALUE);
+        eventFeedView.setStyle("-fx-control-inner-background: #12141f; -fx-font-family: 'Consolas', monospace; -fx-font-size: 11px;");
         VBox.setVgrow(eventFeedView, Priority.ALWAYS);
         rightFeedBox.getChildren().addAll(lblFeedTitle, eventFeedView);
 
@@ -894,8 +898,11 @@ public class DashboardController {
 
         eventLogsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> {
             if (newV != null) {
+                Object id = newV.get("eventId") != null ? newV.get("eventId") : newV.get("id");
+                Object type = newV.get("eventType") != null ? newV.get("eventType") : newV.get("type");
+                Object payload = newV.get("payloadJson") != null ? newV.get("payloadJson") : newV.get("payload");
                 txtEventDetail.setText(String.format("EVENT #%s | TICK %s | TYPE %s\nPayload:\n%s",
-                        newV.get("id"), newV.get("simulationTick"), newV.get("type"), newV.get("payload")));
+                        id, newV.get("simulationTick"), type, payload));
             }
         });
 
@@ -976,6 +983,7 @@ public class DashboardController {
     private void setupQueuedTable() {
         queuedTable.setStyle("-fx-control-inner-background: #12141f;");
         queuedTable.setPrefHeight(240);
+        queuedTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<Map<String, Object>, String> colId = new TableColumn<>("Request ID");
         colId.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(String.valueOf(d.getValue().get("requestId"))));
@@ -1008,6 +1016,7 @@ public class DashboardController {
     private void setupActiveTripsTable() {
         activeTripsTable.setStyle("-fx-control-inner-background: #12141f;");
         activeTripsTable.setPrefHeight(240);
+        activeTripsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<Map<String, Object>, String> colId = new TableColumn<>("Ride ID");
         colId.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(String.valueOf(d.getValue().get("requestId"))));
@@ -1034,6 +1043,7 @@ public class DashboardController {
     private void setupDriverTable() {
         driverTable.setStyle("-fx-control-inner-background: #12141f;");
         driverTable.setPrefHeight(450);
+        driverTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<Map<String, Object>, String> colId = new TableColumn<>("Driver ID");
         colId.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(String.valueOf(d.getValue().get("driverId"))));
@@ -1067,24 +1077,37 @@ public class DashboardController {
     private void setupEventLogsTable() {
         eventLogsTable.setStyle("-fx-control-inner-background: #12141f;");
         eventLogsTable.setPrefHeight(340);
+        eventLogsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<Map<String, Object>, String> colId = new TableColumn<>("Event ID");
-        colId.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(String.valueOf(d.getValue().get("id"))));
+        colId.setCellValueFactory(d -> {
+            Object id = d.getValue().get("eventId") != null ? d.getValue().get("eventId") : d.getValue().get("id");
+            return new javafx.beans.property.SimpleStringProperty(id != null ? String.valueOf(id) : "");
+        });
 
         TableColumn<Map<String, Object>, String> colTick = new TableColumn<>("Tick");
         colTick.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(String.valueOf(d.getValue().get("simulationTick"))));
 
         TableColumn<Map<String, Object>, String> colType = new TableColumn<>("Type");
-        colType.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(String.valueOf(d.getValue().get("type"))));
+        colType.setCellValueFactory(d -> {
+            Object t = d.getValue().get("eventType") != null ? d.getValue().get("eventType") : d.getValue().get("type");
+            return new javafx.beans.property.SimpleStringProperty(t != null ? String.valueOf(t) : "");
+        });
 
         TableColumn<Map<String, Object>, String> colEntity = new TableColumn<>("Entity ID");
         colEntity.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(String.valueOf(d.getValue().get("entityId"))));
 
         TableColumn<Map<String, Object>, String> colTime = new TableColumn<>("Simulated At");
-        colTime.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(String.valueOf(d.getValue().get("simulatedAt"))));
+        colTime.setCellValueFactory(d -> {
+            Object tm = d.getValue().get("createdAt") != null ? d.getValue().get("createdAt") : d.getValue().get("simulatedAt");
+            return new javafx.beans.property.SimpleStringProperty(tm != null ? String.valueOf(tm) : "");
+        });
 
-        TableColumn<Map<String, Object>, String> colPayload = new TableColumn<>("Payload Summary");
-        colPayload.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(String.valueOf(d.getValue().get("payload"))));
+        TableColumn<Map<String, Object>, String> colPayload = new TableColumn<>("Payload Details");
+        colPayload.setCellValueFactory(d -> {
+            Object pl = d.getValue().get("payloadJson") != null ? d.getValue().get("payloadJson") : d.getValue().get("payload");
+            return new javafx.beans.property.SimpleStringProperty(pl != null ? String.valueOf(pl) : "");
+        });
 
         eventLogsTable.getColumns().setAll(colId, colTick, colType, colEntity, colTime, colPayload);
     }
@@ -1270,7 +1293,10 @@ public class DashboardController {
             lblQueued.setText(String.valueOf(ov.get("queuedRequests")));
             lblActive.setText(String.valueOf(ov.get("activeTrips")));
             lblCompleted.setText(String.valueOf(ov.get("completedTrips")));
-            lblRevenue.setText("₹" + String.valueOf(ov.get("totalRevenue")));
+            Number rev = (Number) ov.get("totalRevenue");
+            double revVal = rev != null ? rev.doubleValue() : 0.0;
+            lblRevenue.setText(String.format("₹%,.0f", revVal));
+            lblRevenue.setTooltip(new Tooltip(String.format("Total System Fare Revenue: ₹%,.2f", revVal)));
             lblAvgSurge.setText(String.valueOf(ov.get("averageSurgeMultiplier")) + "x");
         })).exceptionally(ex -> null);
 
@@ -1327,8 +1353,7 @@ public class DashboardController {
             eventFeedList.clear();
             allEventsList.setAll(events);
             for (Map<String, Object> ev : events) {
-                eventFeedList.add(String.format("[TICK %s] %s | Entity #%s | %s",
-                        ev.get("simulationTick"), ev.get("type"), ev.get("entityId"), ev.get("payload")));
+                eventFeedList.add(formatEventFeedEntry(ev));
             }
         })).exceptionally(ex -> null);
     }
@@ -1402,7 +1427,9 @@ public class DashboardController {
     private VBox createKpiCard(String title, Label valLabel, String accentColor) {
         VBox box = new VBox(6);
         box.setPadding(new Insets(12, 16, 12, 16));
-        box.setPrefWidth(140);
+        box.setMinWidth(115);
+        box.setPrefWidth(Region.USE_COMPUTED_SIZE);
+        HBox.setHgrow(box, Priority.ALWAYS);
         box.getStyleClass().add("kpi-card");
 
         Label t = new Label(title);
@@ -1413,6 +1440,47 @@ public class DashboardController {
 
         box.getChildren().addAll(t, valLabel);
         return box;
+    }
+
+    private String formatEventFeedEntry(Map<String, Object> ev) {
+        Object tickObj = ev.get("simulationTick");
+        long tick = 0;
+        if (tickObj instanceof Number n) {
+            tick = n.longValue();
+        } else if (tickObj != null) {
+            try { tick = Long.parseLong(tickObj.toString()); } catch (Exception ignored) {}
+        }
+
+        Object typeObj = ev.get("eventType") != null ? ev.get("eventType") : ev.get("type");
+        String type = typeObj != null ? typeObj.toString() : "EVENT";
+
+        Object entityObj = ev.get("entityId") != null ? ev.get("entityId") : ev.get("id");
+        String entity = entityObj != null ? entityObj.toString() : "-";
+
+        Object payloadObj = ev.get("payloadJson") != null ? ev.get("payloadJson") : ev.get("payload");
+        String payload = payloadObj != null ? payloadObj.toString() : "";
+
+        String summary;
+        switch (type) {
+            case "RIDE_QUEUED" -> summary = "Ride #" + entity + " requested & placed in priority queue";
+            case "RIDE_ASSIGNED" -> summary = "Ride #" + entity + " matched with optimal driver";
+            case "RIDE_STARTED" -> summary = "Driver arrived at pickup for Ride #" + entity;
+            case "RIDE_COMPLETED" -> summary = "Ride #" + entity + " delivered & fare credited";
+            case "RIDE_CANCELLED" -> summary = "Ride #" + entity + " cancelled by rider";
+            case "RIDE_EXPIRED" -> summary = "Ride #" + entity + " expired (no driver within 10 km)";
+            case "SURGE_CHANGED" -> summary = "Dynamic surge pricing adjusted for Zone #" + entity;
+            default -> {
+                if (payload.startsWith("{") && payload.endsWith("}")) {
+                    summary = payload.substring(1, payload.length() - 1).replace("\"", "").replace(",", " | ");
+                } else if (!payload.isEmpty()) {
+                    summary = payload;
+                } else {
+                    summary = "Entity #" + entity;
+                }
+            }
+        }
+
+        return String.format("[TICK %d] %-14s | %s", tick, type, summary);
     }
 
     private HBox createLegendItem(String symbol, String text, String colorHex) {

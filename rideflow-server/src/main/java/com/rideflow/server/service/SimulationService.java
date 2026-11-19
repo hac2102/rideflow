@@ -138,7 +138,7 @@ public class SimulationService {
 
             if (progress.getStage() == ActiveTripProgress.Stage.ARRIVED_AT_PICKUP) {
                 // Driver arrived at passenger pickup: begin trip
-                rideLifecycleService.startRide(progress.getRequestId(), getCurrentRun().getRunId());
+                rideLifecycleService.startRide(progress.getRequestId(), getCurrentRun().getRunId(), tick);
                 driver.updatePosition(nextPos, zoneId);
                 driver.setStatus(DriverStatus.ON_TRIP);
                 driverDao.update(driver);
@@ -147,7 +147,7 @@ public class SimulationService {
                 // Driver arrived at dropoff destination: complete trip
                 RideRequest req = rideRequestDao.findById(progress.getRequestId()).orElse(null);
                 Money fare = req != null ? req.getQuotedFare() : Money.of(150.0);
-                rideLifecycleService.completeRide(progress.getRequestId(), progress.getDriverId(), nextPos, fare, getCurrentRun().getRunId());
+                rideLifecycleService.completeRide(progress.getRequestId(), progress.getDriverId(), nextPos, fare, getCurrentRun().getRunId(), tick);
                 iter.remove();
             } else {
                 // Driver en route: update interpolated position
@@ -198,7 +198,11 @@ public class SimulationService {
                 tick, currentTime, currentScenario, nextGeneratedRequestId.getAndAdd(10), 1L
         );
         for (RideRequest r : generated) {
-            rideLifecycleService.createAndQueueRide(r.getRiderId(), r.getPickupCoordinate(), r.getDestinationCoordinate(), r.getRequestType(), getCurrentRun().getRunId());
+            try {
+                rideLifecycleService.createAndQueueRide(r.getRiderId(), r.getPickupCoordinate(), r.getDestinationCoordinate(), r.getRequestType(), getCurrentRun().getRunId(), tick);
+            } catch (Exception e) {
+                log.warn("Failed to queue ride request: {}", e.getMessage());
+            }
         }
     }
 
@@ -284,7 +288,8 @@ public class SimulationService {
             double py = row * 20.0 + 2.0 + rng.nextDouble() * 16.0;
             double dx = rng.nextDouble() * 100.0;
             double dy = rng.nextDouble() * 100.0;
-            rideLifecycleService.createAndQueueRide(100L + i, new Coordinate(px, py), new Coordinate(dx, dy), com.rideflow.core.enums.RequestType.STANDARD, runId);
+            long riderId = 1L + (i % 5);
+            rideLifecycleService.createAndQueueRide(riderId, new Coordinate(px, py), new Coordinate(dx, dy), com.rideflow.core.enums.RequestType.STANDARD, runId);
         }
         log.info("Injected Rush Hour spike with {} requests in Zone {}", requestCount, zoneId);
     }
@@ -299,7 +304,8 @@ public class SimulationService {
             double py = row * 20.0 + 2.0 + rng.nextDouble() * 16.0;
             double dx = rng.nextDouble() * 100.0;
             double dy = rng.nextDouble() * 100.0;
-            rideLifecycleService.createAndQueueRide(200L + z, new Coordinate(px, py), new Coordinate(dx, dy), com.rideflow.core.enums.RequestType.STANDARD, runId);
+            long riderId = 1L + ((z - 1) % 5);
+            rideLifecycleService.createAndQueueRide(riderId, new Coordinate(px, py), new Coordinate(dx, dy), com.rideflow.core.enums.RequestType.STANDARD, runId);
         }
         log.info("Injected Rainstorm city-wide demand shock");
     }

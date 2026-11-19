@@ -48,6 +48,10 @@ public class RideLifecycleService {
     }
 
     public RideRequest createAndQueueRide(long riderId, Coordinate pickup, Coordinate destination, RequestType type, long runId) {
+        return createAndQueueRide(riderId, pickup, destination, type, runId, 0);
+    }
+
+    public RideRequest createAndQueueRide(long riderId, Coordinate pickup, Coordinate destination, RequestType type, long runId, long tick) {
         // Step 1: Calculate and persist locked fare quotation
         FareQuote quote = pricingService.generateAndSaveQuote(pickup, destination);
 
@@ -75,7 +79,7 @@ public class RideLifecycleService {
 
         // Record simulation event
         SimulationEvent event = new SimulationEvent(
-                null, runId, 0, EventType.RIDE_QUEUED, requestId,
+                null, runId, tick, EventType.RIDE_QUEUED, requestId,
                 String.format("{\"requestId\":%d,\"riderId\":%d,\"type\":\"%s\",\"fare\":%.2f}",
                         requestId, riderId, type, quote.getFinalQuotedFare().getAmount())
         );
@@ -124,6 +128,10 @@ public class RideLifecycleService {
     }
 
     public void startRide(long requestId, long runId) {
+        startRide(requestId, runId, 0);
+    }
+
+    public void startRide(long requestId, long runId, long tick) {
         try (Connection conn = dataSource.getConnection()) {
             rideRequestDao.markStarted(conn, requestId, LocalDateTime.now());
             RideRequest req = rideRequestDao.findById(conn, requestId).orElseThrow();
@@ -131,7 +139,7 @@ public class RideLifecycleService {
                 driverDao.updateStatusAndVersion(conn, req.getAssignedDriverId(), DriverStatus.RESERVED, DriverStatus.ON_TRIP);
             }
             simulationEventDao.save(new SimulationEvent(
-                    null, runId, 0, EventType.RIDE_STARTED, requestId,
+                    null, runId, tick, EventType.RIDE_STARTED, requestId,
                     "{\"requestId\":" + requestId + "}"
             ));
         } catch (SQLException e) {
@@ -141,6 +149,10 @@ public class RideLifecycleService {
     }
 
     public void completeRide(long requestId, long driverId, Coordinate dropoffPos, Money fareEarned, long runId) {
+        completeRide(requestId, driverId, dropoffPos, fareEarned, runId, 0);
+    }
+
+    public void completeRide(long requestId, long driverId, Coordinate dropoffPos, Money fareEarned, long runId, long tick) {
         try (Connection conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
             try {
@@ -158,7 +170,7 @@ public class RideLifecycleService {
                 conn.commit();
 
                 simulationEventDao.save(new SimulationEvent(
-                        null, runId, 0, EventType.RIDE_COMPLETED, requestId,
+                        null, runId, tick, EventType.RIDE_COMPLETED, requestId,
                         String.format("{\"requestId\":%d,\"driverId\":%d,\"fare\":%.2f}", requestId, driverId, fareEarned.getAmount())
                 ));
                 log.info("Ride #{} completed by Driver #{}. Fare {} credited.", requestId, driverId, fareEarned);
