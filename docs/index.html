@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RideFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* VOICE  occasion: a project website for an enterprise Java simulator, confident and technical
+   IDEA   the RideFlow operator console itself: the same dark JavaFX palette, KPI strip and 5x5 city
+   PICTURE a live, working copy of the city simulator in the first screen (drivers move, queue, surge heatmap)
+   COLOUR console ground #0b0c10, panels #161926, signal green #00f59b, dispatch blue #00a8ff, reserved orange, surge red
+   TYPE   Space Grotesk for titles and figures + Inter for text, JetBrains Mono only for code
+   LAYOUT title band across the top, simulator full width beneath (map left, controls/queue/feed right); stacks on phones */
+:root{color-scheme:dark;--bg:#0b0c10;--bg2:#12141f;--panel:#161926;--panel2:#1c2030;--line:#2b3145;--ink:#e6ebf2;--mute:#9aa6b8;--green:#00f59b;--blue:#00a8ff;--orange:#ffaa00;--red:#ff4757;--gray:#5d6680;--g2:#14c784;--b2:#3a96e0}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Inter,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Space Grotesk",Inter,sans-serif;line-height:1.08;letter-spacing:-.02em;margin:0;text-wrap:balance}
+h2{font-size:clamp(30px,3.6vw,44px);margin-bottom:14px}
+h3{font-size:20px;margin-bottom:6px}
+p{margin:0 0 12px}
+a{color:var(--blue)}
+code,pre{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:14px}
+code{overflow-wrap:anywhere}
+pre{overflow-x:auto;background:#0d0f17;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:0;line-height:1.5}
+img{max-width:100%;display:block}
+.wrap{max-width:1240px;margin:0 auto}
+.band{padding:clamp(36px,5vw,72px) max(5vw,16px)}
+.alt{background:var(--bg2);border-block:1px solid var(--line)}
+.lead{font-size:18px;color:var(--mute);max-width:68ch}
+.mute{color:var(--mute)}
+.small{font-size:14px}
+nav.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav.top .wrap{display:flex;align-items:center;gap:20px;padding:10px max(5vw,16px);max-width:none}
+.brand{display:flex;align-items:center;gap:10px;font:700 20px "Space Grotesk",sans-serif;color:var(--ink);text-decoration:none;flex:none}
+.links{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-left:auto}
+.links a{flex:none;color:var(--mute);text-decoration:none;font-size:15px;padding:10px 10px;border-radius:8px}
+.links a:hover,.links a:focus-visible{color:var(--ink);background:var(--panel)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font:600 15px Inter,sans-serif;cursor:pointer;text-decoration:none}
+.btn:hover{border-color:#46506d}
+.btn:focus-visible,select:focus-visible,input:focus-visible,.links a:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.btn.go{background:var(--green);border-color:var(--green);color:#04130c}
+.btn.blue{background:var(--blue);border-color:var(--blue);color:#021220}
+.btn[aria-pressed=true]{background:var(--blue);color:#021220;border-color:var(--blue)}
+/* hero */
+.hero{padding:clamp(24px,3vw,40px) max(5vw,16px) 0}
+.herohead{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;align-items:end;margin-bottom:20px}
+.hero h1{font-size:clamp(44px,6.5vw,84px)}
+.hero h1 span{display:block;font-size:clamp(20px,2.1vw,28px);font-weight:500;color:var(--mute);letter-spacing:-.01em;margin-top:10px}
+.herotext p{color:var(--mute);margin-bottom:14px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+/* console */
+.console{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));border-bottom:1px solid var(--line)}
+.kpi{padding:12px 14px;border-right:1px solid var(--line)}
+.kpi b{display:block;font:600 clamp(20px,2vw,26px) "Space Grotesk",sans-serif;white-space:nowrap;font-variant-numeric:tabular-nums}
+.kpi small{color:var(--mute);font-size:13px}
+.kpi.g b{color:var(--green)}.kpi.o b{color:var(--orange)}.kpi.bl b{color:var(--blue)}
+.cbody{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+.mapbox{padding:14px;border-right:1px solid var(--line)}
+.map{position:relative;aspect-ratio:1/1;width:100%;max-height:640px;margin:0 auto;cursor:crosshair}
+.map canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:10px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--mute);margin-top:10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.side{display:flex;flex-direction:column;gap:14px;padding:14px}
+.ctrl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mute)}
+select,input[type=number]{min-height:44px;font:16px Inter,sans-serif;background:var(--bg2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:0 10px}
+.box{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.box h3{font-size:15px;font-family:Inter,sans-serif;font-weight:600;letter-spacing:0;display:flex;justify-content:space-between;gap:8px}
+.q{list-style:none;margin:0;padding:0;font-size:14px}
+.q li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;padding:6px 0;border-top:1px solid var(--line);align-items:center}
+.q li:first-child{border-top:0}
+.tag{font-size:12px;font-weight:600;padding:2px 7px;border-radius:6px;background:#22283a;color:var(--mute);white-space:nowrap}
+.tag.p{background:#3b2a07;color:var(--orange)}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.feed{font:13px/1.55 "JetBrains Mono",monospace;height:220px;overflow-y:auto;margin:0;padding:0;list-style:none}
+.feed li{padding:3px 0;border-top:1px solid #1f2436;color:#c8d1de}
+.feed .t{color:var(--mute)}.feed .A{color:var(--green)}.feed .R{color:var(--blue)}.feed .X{color:var(--red)}.feed .C{color:var(--orange)}
+.why{font-size:14px;color:var(--mute);min-height:44px}
+.why b{color:var(--ink)}
+.note{font-size:13px;color:var(--mute);padding:10px 14px;border-top:1px solid var(--line)}
+/* sections */
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(20px,3vw,40px);align-items:start}
+.qs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:24px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card .big{font:600 34px "Space Grotesk",sans-serif;color:var(--green);line-height:1}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin-top:26px;position:relative}
+.step{padding:0 14px 0 0}
+.step .dot{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font:700 18px "Space Grotesk";background:var(--panel2);border:2px solid var(--green);color:var(--green);position:relative;z-index:1}
+.steps::before{content:"";position:absolute;left:22px;right:22px;top:21px;height:2px;background:var(--line)}
+.step h3{margin-top:12px}
+.states{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;align-items:center;font:500 14px "JetBrains Mono",monospace}
+.states span{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel)}
+.states em{color:var(--mute);font-style:normal}
+.duel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.drv{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.drv.win-n{box-shadow:inset 0 0 0 2px var(--blue)}
+.drv.win-w{outline:2px solid var(--green);outline-offset:-2px}
+.drv.win-n.win-w{box-shadow:inset 0 0 0 4px var(--blue)}
+.rng{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;font-size:14px;margin:10px 0}
+.rng output{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--green);height:30px}
+.score{font:600 28px "Space Grotesk";font-variant-numeric:tabular-nums}
+.verdict{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.verdict div{border-radius:12px;padding:12px 14px;background:var(--panel2);border:1px solid var(--line);font-size:15px}
+.verdict b{display:block;font:600 20px "Space Grotesk"}
+.vn b{color:var(--blue)}.vw b{color:var(--green)}
+.calc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px;align-items:stretch}
+.result{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.fare{font:700 clamp(44px,6vw,68px) "Space Grotesk";color:var(--green);line-height:1;font-variant-numeric:tabular-nums}
+.sum{font:14px/1.7 "JetBrains Mono",monospace;color:#c8d1de;overflow-wrap:anywhere}
+.fig{position:relative;min-height:220px;flex:1}
+.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+svg text{font:13px Inter,sans-serif;fill:var(--mute)}
+.race{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.lane{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.lane ol{margin:8px 0 0;padding-left:20px;font-size:14px}
+.lane li{padding:3px 0;opacity:.35;transition:opacity .3s}
+.lane li.on{opacity:1}
+.lane li.ok{color:var(--green)}.lane li.no{color:var(--red)}
+.layers{display:flex;flex-direction:column;gap:0}
+.layer{border:1px solid var(--line);border-radius:12px;padding:12px 16px;background:var(--panel)}
+.layer b{font-family:"Space Grotesk";font-size:18px}
+.layer small{display:block;color:var(--mute);font-size:14px}
+.arrow{text-align:center;color:var(--mute);font:500 13px "JetBrains Mono";padding:6px 0}
+.duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:500;font-size:14px}
+td.r,th.r{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.gal{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px}
+.gal figure{flex:0 0 min(88%,900px);scroll-snap-align:start;margin:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.gal figure button{all:unset;cursor:zoom-in;display:block}
+.gal figure button:focus-visible{outline:2px solid var(--blue)}
+.gal figcaption{padding:12px 16px;font-size:15px}
+.gal figcaption b{display:block;font-family:"Space Grotesk";font-size:17px}
+.docs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:22px}
+.docs figure{margin:0;background:#fff;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.docs figure button{all:unset;cursor:zoom-in;display:block;width:100%}
+.docs img{aspect-ratio:4/3;object-fit:contain;width:100%;background:#fff}
+.docs figcaption{background:var(--panel);color:var(--ink);padding:10px 12px;font-size:14px}
+dialog{max-width:min(96vw,1700px);background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:12px}
+dialog::backdrop{background:rgba(0,0,0,.8)}
+dialog img{max-height:82vh;margin:0 auto}
+.bench{display:flex;flex-direction:column;gap:18px}
+.brow h3{font-size:16px;font-family:Inter;font-weight:600;letter-spacing:0}
+.bar{display:grid;grid-template-columns:8.5em minmax(0,1fr) 5.5em;gap:10px;align-items:center;font-size:14px;margin-top:6px}
+.bar .t{height:18px;background:#1d2232;border-radius:4px;overflow:hidden}
+.bar .t i{display:block;height:100%;border-radius:0 4px 4px 0}
+.bar .v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pass{color:var(--green);font-weight:600;white-space:nowrap}
+.team{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:20px}
+.team .card b{font-family:"Space Grotesk";font-size:19px;display:block}
+footer{padding:28px max(5vw,16px);border-top:1px solid var(--line);color:var(--mute);font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+.copy{float:right;min-height:36px;font-size:13px;padding:0 10px;margin:-4px 0 6px 8px}
+@media(max-width:980px){.cbody{grid-template-columns:minmax(0,1fr)}.mapbox{border-right:0;border-bottom:1px solid var(--line)}.map{max-width:640px}.steps{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:22px}.steps::before{display:none}.docs{grid-template-columns:repeat(2,minmax(0,1fr))}.team{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.herohead,.grid2,.calc{grid-template-columns:minmax(0,1fr)}.qs{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.links{display:none}.duel,.verdict,.race,.duo{grid-template-columns:minmax(0,1fr)}.steps{grid-template-columns:minmax(0,1fr)}.bar{grid-template-columns:7em minmax(0,1fr) 4.8em}table{font-size:13px}th,td{padding:6px 4px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:3px 0}.stack td::before{content:attr(data-l);color:var(--mute)}.kpi{padding:10px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.lane li{transition:none}}
+</style>
+</head>
+<body>
+<nav class="top" aria-label="Sections"><div class="wrap">
+  <a class="brand" href="#sim"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect x="1" y="1" width="26" height="26" rx="7" fill="#161926" stroke="#2b3145"/><path d="M6 20 L12 12 L17 16 L22 8" fill="none" stroke="#00a8ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="22" cy="8" r="3" fill="#00f59b"/><circle cx="6" cy="20" r="2.4" fill="#ffaa00"/></svg>RideFlow</a>
+  <div class="links scroll">
+    <a href="#how">How it works</a><a href="#dispatch">Dispatch</a><a href="#pricing">Pricing</a><a href="#concurrency">Concurrency</a><a href="#architecture">Architecture</a><a href="#screens">Screens</a><a href="#results">Results</a><a href="#run">Run it</a><a href="#team">Team</a>
+  </div>
+</div></nav>
+
+<header class="hero" id="sim"><div class="wrap">
+  <div class="herohead">
+    <h1>RideFlow<span>Intelligent ride dispatch, fleet management and dynamic pricing simulator</span></h1>
+    <div class="herotext">
+      <p>A Java 21 operations simulator for a fictional 20&nbsp;km city: which driver gets the ride, what the trip costs, and what stops one driver being booked twice. Built with Spring Boot, raw JDBC, MySQL and JavaFX.</p>
+      <div class="row"><a class="btn go" href="https://github.com/shashwatt22/rideflow">View source on GitHub</a><a class="btn" href="#how">How it works</a></div>
+    </div>
+  </div>
+
+  <section class="console" aria-label="Live city simulator">
+    <div class="kpis" id="kpis"></div>
+    <div class="cbody">
+      <div class="mapbox">
+        <div class="map" id="map"><canvas id="cv" aria-label="City map with 25 zones, drivers and ride requests. Click to request a ride."></canvas></div>
+        <div class="legend"><span><i style="background:var(--green)"></i>Available</span><span><i style="background:var(--orange)"></i>Reserved, heading to pickup</span><span><i style="background:var(--blue)"></i>On trip</span><span><i style="background:var(--gray)"></i>Offline</span><span><i style="background:var(--red);border-radius:2px"></i>Waiting rider</span></div>
+      </div>
+      <div class="side">
+        <div class="row">
+          <button class="btn go" id="play" type="button">Pause</button>
+          <button class="btn" id="step" type="button">Step 1 tick</button>
+          <button class="btn" id="reset" type="button">Reset</button>
+        </div>
+        <div class="ctrl">
+          <label class="f" for="scn">Scenario<select id="scn"><option value="NORMAL">Normal demand</option><option value="RUSH_HOUR">Rush hour</option><option value="LOW_SUPPLY">Low supply</option><option value="HIGH_DEMAND">High demand</option><option value="BALANCED">Balanced market</option></select></label>
+          <label class="f" for="strat">Dispatch strategy<select id="strat"><option value="WF">Weighted fair</option><option value="ND">Nearest driver</option></select></label>
+          <label class="f" for="spd">Speed<select id="spd"><option value="1">1×</option><option value="2" selected>2×</option><option value="4">4×</option></select></label>
+          <label class="f" for="seed">Seed<input id="seed" type="number" value="42" inputmode="numeric"></label>
+        </div>
+        <div class="row">
+          <button class="btn" id="rush" type="button">Rush-hour spike, zone 13</button>
+          <button class="btn" id="mob" type="button">Mobilise 5 drivers</button>
+        </div>
+        <div class="why box" id="why">Click anywhere on the map to request a ride from that spot.</div>
+        <div class="box"><h3>Dispatch queue <span class="mute num" id="qn"></span></h3><ul class="q" id="queue"></ul></div>
+        <div class="box"><h3>Event feed</h3><ul class="feed" id="feed" aria-live="off"></ul></div>
+      </div>
+    </div>
+    <p class="note">A browser port of RideFlow's core rules: weighted-fair and nearest-driver scoring, the aging priority queue, per-zone surge, a 10&nbsp;km pickup radius and 15-minute expiry. Demand rates are scaled for a 20-driver fleet; one tick is one simulated minute. The real application runs these rules in Java against MySQL.</p>
+  </section>
+</div></header>
+
+<section class="band" id="how"><div class="wrap">
+  <h2>One ride, from request to completion</h2>
+  <p class="lead">RideFlow is not a booking app. It is the operator's side of a ride-hailing platform, with synthetic riders, drivers, traffic and fares, so every decision can be paused, stepped and explained.</p>
+  <div class="steps">
+    <div class="step"><div class="dot">1</div><h3>Validate and lock the fare</h3><p class="mute">Coordinates must sit inside the 100×100 city. The quote is computed from distance, duration and zone surge, then stored and never changed.</p></div>
+    <div class="step"><div class="dot">2</div><h3>Queue the request</h3><p class="mute">A <code>PriorityQueue</code> orders requests by type plus waiting time, so a standard ride is never starved by a stream of priority ones.</p></div>
+    <div class="step"><div class="dot">3</div><h3>Select and reserve</h3><p class="mute">Available drivers within 10&nbsp;km are scored. The best one is reserved in a single MySQL transaction.</p></div>
+    <div class="step"><div class="dot">4</div><h3>Complete and release</h3><p class="mute">Each tick moves the driver to the pickup, then the destination. The driver is freed, earnings and analytics update.</p></div>
+  </div>
+  <div class="states" aria-label="State transitions"><span>QUEUED</span><em>→</em><span>ASSIGNED</span><em>→</em><span>IN_PROGRESS</span><em>→</em><span>COMPLETED</span><em class="small">&nbsp;&nbsp;driver:</em><span>AVAILABLE</span><em>→</em><span>RESERVED</span><em>→</em><span>ON_TRIP</span><em>→</em><span>AVAILABLE</span></div>
+  <div class="qs">
+    <div class="card"><div class="big">25</div><h3>zones in a 20×20 km city</h3><p class="mute small">A 5×5 grid; one coordinate unit is 0.2&nbsp;km, roads are 1.25× straight-line distance at 30&nbsp;km/h.</p></div>
+    <div class="card"><div class="big">1 tick</div><h3>= one simulated minute</h3><p class="mute small">Start, pause, resume, step and reset. A seeded generator makes every scenario repeatable.</p></div>
+    <div class="card"><div class="big">5</div><h3>demand scenarios</h3><p class="mute small">Normal, rush hour, low supply, high demand and balanced market, plus rush-hour, rainstorm and fleet-mobilisation shocks.</p></div>
+  </div>
+</div></section>
+
+<section class="band alt" id="dispatch"><div class="wrap">
+  <div class="grid2">
+    <div>
+      <h2>Which driver should get the ride?</h2>
+      <p class="lead">The nearest driver is not always the fairest choice. Weighted fair dispatch gives a bounded credit for idle time, so a driver who has waited long is not bypassed forever for someone a few hundred metres closer.</p>
+      <pre><code>score = pickupETA − 0.05 × min(idleMinutes, 30)   // lower wins</code></pre>
+      <p class="mute small" style="margin-top:12px">The idle credit is capped at 1.5 minutes, so fairness can never override a large distance. Ties break on <code>driverId</code> for reproducible results. Nearest driver uses pickup ETA alone.</p>
+    </div>
+    <div>
+      <div class="duel" id="duel"></div>
+      <div class="verdict"><div class="vn"><span class="small mute">Nearest driver picks</span><b id="vn"></b></div><div class="vw"><span class="small mute">Weighted fair picks</span><b id="vw"></b></div></div>
+      <p class="small mute" style="margin-top:10px">Defaults are the illustrative example from the project report. Drag the sliders to find where the two strategies disagree.</p>
+    </div>
+  </div>
+</div></section>
+
+<section class="band" id="pricing"><div class="wrap">
+  <h2>How a ₹151.00 fare becomes ₹264.25</h2>
+  <p class="lead">Surge is computed per zone at the moment of quoting, clamped between 1.0× and 2.5×, and calculated with <code>BigDecimal</code>. The quote is locked into <code>fare_quotes</code> when the ride is booked.</p>
+  <div class="calc" style="margin-top:20px">
+    <div class="card">
+      <div class="rng"><label for="pD">Pending requests in zone (D)</label><output id="oD"></output><input type="range" id="pD" min="0" max="40" value="12"></div>
+      <div class="rng"><label for="pS">Available drivers in zone (S)</label><output id="oS"></output><input type="range" id="pS" min="0" max="20" value="3"></div>
+      <div class="rng"><label for="pK">Trip distance</label><output id="oK"></output><input type="range" id="pK" min="0.5" max="25" step="0.25" value="6.25"></div>
+      <div class="rng"><label for="pM">Estimated duration</label><output id="oM"></output><input type="range" id="pM" min="1" max="90" value="18"></div>
+      <button class="btn" id="pReset" type="button">Back to the report's test case</button>
+    </div>
+    <div class="result">
+      <div><span class="mute small">Final quoted fare</span><div class="fare" id="fare"></div></div>
+      <div class="sum" id="sum"></div>
+      <div class="fig"><svg id="curve" role="img" aria-label="Surge multiplier against demand-to-supply ratio"></svg></div>
+    </div>
+  </div>
+</div></section>
+
+<section class="band alt" id="concurrency"><div class="wrap">
+  <div class="grid2">
+    <div>
+      <h2>Two requests, one driver, no double booking</h2>
+      <p class="lead">Two dispatch threads can pick the same best driver at the same instant. RideFlow guards the reservation with a conditional update inside one JDBC transaction.</p>
+      <button class="btn copy" type="button" data-copy="sql">Copy</button>
+      <pre id="sql"><code>UPDATE drivers
+   SET status = 'RESERVED', version = version + 1,
+       updated_at = CURRENT_TIMESTAMP
+ WHERE driver_id = ? AND status = 'AVAILABLE';
+-- affectedRows == 1  → insert assignment, commit
+-- affectedRows == 0  → rollback, try next candidate</code></pre>
+      <p class="mute small" style="margin-top:12px">Verified by <code>ConcurrentDispatchTest</code>: 2 competing attempts, 1 successful reservation, 1 active assignment.</p>
+    </div>
+    <div>
+      <div class="race" id="race">
+        <div class="lane"><h3>Thread 1: ride #1041</h3><ol><li>Begin transaction</li><li>Pick driver #108</li><li>UPDATE … WHERE status = 'AVAILABLE'</li><li class="ok">1 row updated</li><li class="ok">Insert assignment, commit</li></ol></div>
+        <div class="lane"><h3>Thread 2: ride #1042</h3><ol><li>Begin transaction</li><li>Pick driver #108</li><li>UPDATE … WHERE status = 'AVAILABLE'</li><li class="no">0 rows: already RESERVED</li><li class="no">Rollback, retry next driver</li></ol></div>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="btn blue" id="raceBtn" type="button">Replay the race</button><span class="mute small">Result: one driver, one active ride.</span></div>
+    </div>
+  </div>
+</div></section>
+
+<section class="band" id="architecture"><div class="wrap">
+  <div class="grid2">
+    <div>
+      <h2>A modular monolith with a desktop console</h2>
+      <p class="lead">Three Maven modules. Only the backend touches the database; the JavaFX client talks to it over HTTP/JSON, so every rule is enforced in one place.</p>
+      <div class="layers">
+        <div class="layer"><b>rideflow-desktop</b><small>JavaFX 21 operator console: 9 screens, live 100×100 city canvas, event ticker, CSV export</small></div>
+        <div class="arrow">HTTP / JSON</div>
+        <div class="layer"><b>rideflow-server</b><small>Spring Boot 3.3.5 REST controllers, dispatch, pricing, lifecycle, simulation and analytics services, raw JDBC DAOs on HikariCP, Flyway migrations</small></div>
+        <div class="arrow">uses ↓ &nbsp;&nbsp;&nbsp; JDBC ↓</div>
+        <div class="duo"><div class="layer"><b>rideflow-core</b><small>Pure Java 21: models, state machines, strategies, comparators, pricing engine, simulation clock</small></div><div class="layer"><b>MySQL 8</b><small>10 tables, foreign keys, composite indexes, row-level locking. H2 in MySQL mode needs no setup</small></div></div>
+      </div>
+    </div>
+    <div>
+      <h3>Technology stack</h3>
+      <div class="scroll"><table class="stack"><thead><tr><th>Layer</th><th>Technology</th><th>Used for</th></tr></thead><tbody id="stackT"></tbody></table></div>
+    </div>
+  </div>
+  <div class="docs" id="docs"></div>
+</div></section>
+
+<section class="band alt" id="screens"><div class="wrap">
+  <div class="row" style="justify-content:space-between;margin-bottom:14px"><h2 style="margin:0">The operator console</h2><div class="row"><button class="btn" id="gPrev" type="button" aria-label="Previous screenshot">←</button><button class="btn" id="gNext" type="button" aria-label="Next screenshot">→</button></div></div>
+  <div class="gal" id="gal" tabindex="0" aria-label="Screenshots of the JavaFX application"></div>
+</div></section>
+
+<section class="band" id="results"><div class="wrap">
+  <h2>Weighted fair costs 43–54% more time, and stays under 200&nbsp;ms at 20,000 requests</h2>
+  <p class="lead">Median execution time of one matching pass over ten runs, from the project report. These are benchmark timings, not production latency.</p>
+  <div class="grid2" style="margin-top:22px">
+    <div>
+      <div class="legend" style="margin:0 0 6px"><span><i style="background:var(--b2);border-radius:2px"></i>Nearest driver</span><span><i style="background:var(--g2);border-radius:2px"></i>Weighted fair</span></div>
+      <div class="bench" id="bench"></div>
+      <p class="small mute" style="margin-top:14px">Each workload is drawn on its own scale. The matching pass can examine up to requests × drivers pairs; the three workloads do not establish sub-linear scaling.</p>
+    </div>
+    <div>
+      <h3>17 of 17 tests pass</h3>
+      <div class="scroll"><table><thead><tr><th>Test class</th><th>Covers</th><th class="r">Tests</th></tr></thead><tbody id="testsT"></tbody></table></div>
+    </div>
+  </div>
+  <h3 style="margin-top:34px">Functional test cases</h3>
+  <div class="scroll"><table class="stack"><thead><tr><th>Case</th><th>Input</th><th>Observed</th><th>Result</th></tr></thead><tbody id="casesT"></tbody></table></div>
+  <h3 style="margin-top:34px">Errors the backend rejects</h3>
+  <div class="scroll"><table class="stack"><thead><tr><th>Attempt</th><th>Why it is refused</th></tr></thead><tbody id="errT"></tbody></table></div>
+</div></section>
+
+<section class="band alt" id="run"><div class="wrap">
+  <div class="grid2">
+    <div>
+      <h2>Run it locally</h2>
+      <p class="lead">Needs JDK 21+ and Maven 3.8+. Docker is optional: without MySQL the server falls back to an in-memory MySQL-compatible database.</p>
+      <button class="btn copy" type="button" data-copy="cmds">Copy</button>
+      <pre id="cmds"><code>git clone https://github.com/shashwatt22/rideflow.git
+cd rideflow
+mvn clean install            # build + all tests
+
+docker compose up -d         # optional: MySQL 8
+
+cd rideflow-server
+mvn spring-boot:run          # http://localhost:8080
+                             # Swagger: /swagger-ui.html
+cd ../rideflow-desktop
+mvn javafx:run               # operator console</code></pre>
+      <p class="small mute" style="margin-top:10px">On Windows, <code>scripts\run_all.cmd</code> starts the server and the console together.</p>
+    </div>
+    <div>
+      <h3>REST API highlights</h3>
+      <div class="scroll"><table class="stack"><thead><tr><th>Endpoint</th><th>Does</th></tr></thead><tbody id="apiT"></tbody></table></div>
+    </div>
+  </div>
+</div></section>
+
+<section class="band" id="team"><div class="wrap">
+  <h2>Team</h2>
+  <p class="lead">UCS553 Enterprise Web Application mini-project, Department of Computer Science and Engineering, Thapar Institute of Engineering &amp; Technology, Patiala. November 2026.</p>
+  <div class="team">
+    <div class="card"><b>Shashwat Tewari</b><span class="mute small">1024031065</span><p class="small" style="margin-top:8px">Core algorithms and simulation</p></div>
+    <div class="card"><b>Humza Ali Choudhri</b><span class="mute small">1024031070</span><p class="small" style="margin-top:8px">Backend and database</p></div>
+    <div class="card"><b>Avik Khetarpal</b><span class="mute small">1024031066</span><p class="small" style="margin-top:8px">JavaFX interface and integration</p></div>
+    <div class="card"><b>Dr. Chinu Dhir</b><span class="mute small">Faculty guide</span><p class="small" style="margin-top:8px">Project supervision</p></div>
+  </div>
+  <p class="small mute" style="margin-top:22px">Deliberate scope limits: synthetic coordinates instead of GPS, approximate road distance, synthetic traffic, no rider accounts, payments or real bookings, and a single deployable rather than microservices.</p>
+</div></section>
+
+<footer><div class="wrap"><span>RideFlow · Java 21 · Spring Boot · JDBC · MySQL · JavaFX</span><a href="https://github.com/shashwatt22/rideflow">github.com/shashwatt22/rideflow</a></div></footer>
+
+<dialog id="lb"><form method="dialog" style="text-align:right;margin-bottom:8px"><button class="btn" type="submit">Close</button></form><img id="lbImg" alt=""><p id="lbCap" class="small mute" style="margin:8px 4px 0"></p></dialog>
+
+<script>
+{
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const inr=v=>"₹"+v.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+const round2=v=>Math.round((v+Number.EPSILON)*100)/100;
+
+/* ---------- pricing rules (shared) ---------- */
+const surgeOf=(D,S)=>{const R=D/Math.max(S,1);return {R,M:Math.min(2.5,Math.max(1,1+0.25*Math.max(0,R-1)))}};
+const baseFare=(km,min)=>40+12*km+2*min;
+
+/* ---------- simulator ---------- */
+const SCN={NORMAL:{rate:.5,prio:.15,drivers:20,traffic:1,bias:false},RUSH_HOUR:{rate:1.15,prio:.35,drivers:20,traffic:1.3,bias:true},LOW_SUPPLY:{rate:.55,prio:.10,drivers:8,traffic:1,bias:false},HIGH_DEMAND:{rate:1.8,prio:.40,drivers:20,traffic:1.3,bias:true},BALANCED:{rate:.6,prio:.20,drivers:20,traffic:1,bias:false}};
+const NAMES=["Ravi","Asha","Karan","Meera","Arjun","Neha","Vikram","Pooja","Rohit","Simran","Aman","Divya","Sahil","Tanvi","Nikhil","Ishita","Manav","Riya","Dev","Kavya","Yash","Anaya","Kabir","Sana","Rahul"];
+const VEH=["SEDAN","HATCHBACK","SUV","AUTO"];
+let S, timer=null, running=true, lastTick=performance.now();
+function rng(seed){let a=seed>>>0||1;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const zoneOf=(x,y)=>Math.min(4,Math.floor(y/20))*5+Math.min(4,Math.floor(x/20))+1;
+const roadKm=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y)*0.2*1.25;
+const etaMin=(km,tr)=>km/30*60*tr;
+function reset(){
+  const scn=$("scn").value, seed=parseInt($("seed").value,10)||42, r=rng(seed), c=SCN[scn];
+  S={scn,c,r,tick:0,nextId:1001,drivers:[],reqs:[],events:[],revenue:0,completed:0,expired:0};
+  for(let i=0;i<20;i++){const x=4+r()*92,y=4+r()*92;S.drivers.push({id:101+i,name:NAMES[i],veh:VEH[i%4],x,y,px:x,py:y,status:i<c.drivers?"AVAILABLE":"OFFLINE",idleSince:-Math.floor(r()*30),trips:0,earn:0,req:null})}
+  log("SIM","Run reset · scenario "+scn+" · seed "+seed,"C");
+  for(let i=0;i<(scn==="NORMAL"||scn==="BALANCED"?3:6);i++)newReq(false);
+  dispatch(); render();
+}
+function log(type,msg,cls){S.events.unshift({t:S.tick,type,msg,cls});if(S.events.length>80)S.events.pop()}
+function coord(bias){const r=S.r;if(bias&&r()<.55)return{x:40+r()*20,y:40+r()*20};return{x:2+r()*96,y:2+r()*96}}
+function newReq(user,at){
+  const r=S.r,p=at||coord(S.c.bias);let d=coord(false);while(Math.hypot(d.x-p.x,d.y-p.y)<15)d=coord(false);
+  const type=!user&&r()<S.c.prio?"PRIORITY":"STANDARD", z=zoneOf(p.x,p.y);
+  const D=S.reqs.filter(q=>q.status==="QUEUED"&&q.zone===z).length+1, Sup=S.drivers.filter(v=>v.status==="AVAILABLE"&&zoneOf(v.x,v.y)===z).length;
+  const km=roadKm(p,d),min=etaMin(km,S.c.traffic),{M}=surgeOf(D,Sup),base=round2(baseFare(km,min)),fare=round2(base*M);
+  const q={id:S.nextId++,type,p,d,zone:z,created:S.tick,status:"QUEUED",base,M,fare,driver:null};
+  S.reqs.push(q);
+  log("RIDE_REQUESTED","Ride #"+q.id+" "+type+" in zone "+z+" · quote "+inr(fare)+(M>1?" ("+M.toFixed(2)+"× surge)":""),"R");
+  return q;
+}
+const prioScore=q=>(q.type==="PRIORITY"?2:1)*10+(S.tick-q.created)*2;
+function queue(){return S.reqs.filter(q=>q.status==="QUEUED").sort((a,b)=>prioScore(b)-prioScore(a)||a.created-b.created||a.id-b.id)}
+function dispatch(){
+  const strat=$("strat").value;
+  for(const q of queue()){
+    const cands=S.drivers.filter(v=>v.status==="AVAILABLE").map(v=>{const km=roadKm(v,q.p),eta=etaMin(km,S.c.traffic),idle=S.tick-v.idleSince,cr=0.05*Math.min(idle,30);return{v,km,eta,idle,score:strat==="WF"?eta-cr:eta,cr}}).filter(c=>c.km<=10);
+    if(!cands.length)continue;
+    cands.sort((a,b)=>a.score-b.score||a.v.id-b.v.id);
+    const w=cands[0];
+    w.v.status="RESERVED";w.v.req=q;q.status="ASSIGNED";q.driver=w.v;
+    log("RIDE_ASSIGNED","Ride #"+q.id+" → Driver #"+w.v.id+" · ETA "+w.eta.toFixed(1)+" min"+(strat==="WF"?" − idle credit "+w.cr.toFixed(2)+" = "+w.score.toFixed(2):""),"A");
+    S.lastWhy={q,w,n:cands.length,strat};
+  }
+}
+function moveTo(v,t,step){const dx=t.x-v.x,dy=t.y-v.y,dd=Math.hypot(dx,dy);if(dd<=step){v.x=t.x;v.y=t.y;return true}v.x+=dx/dd*step;v.y+=dy/dd*step;return false}
+function tick(){
+  S.tick++;
+  for(const v of S.drivers){v.px=v.x;v.py=v.y}
+  // demand
+  let n=0,lam=S.c.rate,L=Math.exp(-lam),p=1;do{n++;p*=S.r()}while(p>L);n--;
+  for(let i=0;i<n;i++)newReq(false);
+  // expire
+  for(const q of S.reqs)if(q.status==="QUEUED"&&S.tick-q.created>15){q.status="EXPIRED";S.expired++;log("RIDE_EXPIRED","Ride #"+q.id+" waited 15 min without an eligible driver","X")}
+  dispatch();
+  // movement
+  const step=2.5/S.c.traffic;
+  for(const v of S.drivers){
+    const q=v.req;if(!q)continue;
+    if(v.status==="RESERVED"&&moveTo(v,q.p,step)){v.status="ON_TRIP";q.status="IN_PROGRESS";log("RIDE_STARTED","Driver #"+v.id+" picked up ride #"+q.id,"R")}
+    else if(v.status==="ON_TRIP"&&moveTo(v,q.d,step)){q.status="COMPLETED";v.status="AVAILABLE";v.req=null;v.idleSince=S.tick;v.trips++;v.earn+=q.fare;S.revenue+=q.fare;S.completed++;log("RIDE_COMPLETED","Ride #"+q.id+" completed · "+inr(q.fare)+" to Driver #"+v.id,"C")}
+  }
+  S.reqs=S.reqs.filter(q=>!((q.status==="COMPLETED"||q.status==="EXPIRED")&&S.tick-q.created>40));
+  lastTick=performance.now();
+  render();
+}
+function zoneStats(){const z=[];for(let i=1;i<=25;i++)z.push({D:0,S:0});for(const q of S.reqs)if(q.status==="QUEUED")z[q.zone-1].D++;for(const v of S.drivers)if(v.status==="AVAILABLE")z[zoneOf(v.x,v.y)-1].S++;return z.map(o=>({...o,M:surgeOf(o.D,o.S).M}))}
+function clock(t){const m=8*60+t;return String(Math.floor(m/60)%24).padStart(2,"0")+":"+String(m%60).padStart(2,"0")}
+function render(){
+  const av=S.drivers.filter(v=>v.status==="AVAILABLE").length, on=S.drivers.filter(v=>v.status!=="OFFLINE").length;
+  const qd=queue(), act=S.reqs.filter(q=>q.status==="ASSIGNED"||q.status==="IN_PROGRESS").length;
+  const zs=zoneStats(), avgM=zs.reduce((a,b)=>a+b.M,0)/25, maxM=Math.max(...zs.map(z=>z.M));
+  const k=[["Tick "+S.tick,clock(S.tick)+" simulated",""],[av+" / "+on,"Drivers available","g"],[qd.length,"Queued","o"],[act,"Active trips","bl"],[S.completed,"Completed",""],[S.expired,"Expired",""],[avgM.toFixed(2)+"×","Avg surge (peak "+maxM.toFixed(1)+"×)",""],["₹"+Math.round(S.revenue).toLocaleString("en-IN"),"Sim revenue","g"]];
+  $("kpis").innerHTML=k.map(([b,s,c])=>`<div class="kpi ${c}"><b>${esc(b)}</b><small>${esc(s)}</small></div>`).join("");
+  $("qn").textContent=qd.length?qd.length+" waiting":"";
+  $("queue").innerHTML=qd.length?qd.slice(0,6).map(q=>`<li><span class="tag ${q.type==="PRIORITY"?"p":""}">${q.type==="PRIORITY"?"Priority":"Standard"}</span><span>#${q.id} · zone ${q.zone} · waited ${S.tick-q.created} min<br><span class="mute small">priority score ${prioScore(q)}</span></span><span class="num">${esc(inr(q.fare))}</span></li>`).join(""):`<li><span></span><span class="mute">Queue is empty. Every request has a driver.</span><span></span></li>`;
+  $("feed").innerHTML=S.events.slice(0,40).map(e=>`<li><span class="t">[${e.t}]</span> <span class="${e.cls}">${esc(e.type)}</span> ${esc(e.msg)}</li>`).join("");
+  const w=S.lastWhy;
+  if(w)$("why").innerHTML=`Last match: <b>ride #${w.q.id} → driver #${w.w.v.id}</b> (${esc(w.w.v.name)}, ${esc(w.w.v.veh)}), best of ${w.n} eligible within 10&nbsp;km. ETA ${w.w.eta.toFixed(1)} min, idle ${w.w.idle} min${w.strat==="WF"?`, score ${w.w.score.toFixed(2)}`:""}. Fare locked at ${esc(inr(w.q.fare))}.`;
+}
+/* canvas */
+const cv=$("cv"),ctx=cv.getContext("2d");
+function draw(){
+  const W=cv.clientWidth,H=cv.clientHeight,dpr=window.devicePixelRatio||1;
+  if(cv.width!==Math.round(W*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr)}
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const sx=W/100,sy=H/100;
+  ctx.fillStyle="#0d0f17";ctx.fillRect(0,0,W,H);
+  const zs=zoneStats();
+  for(let i=0;i<25;i++){const c=i%5,r=Math.floor(i/5),M=zs[i].M;if(M>1){ctx.fillStyle=`rgba(255,${Math.round(170-110*(M-1)/1.5)},0,${0.08+0.22*(M-1)/1.5})`;ctx.fillRect(c*20*sx,r*20*sy,20*sx,20*sy)}}
+  ctx.strokeStyle="#232a3d";ctx.lineWidth=1;
+  for(let i=1;i<5;i++){ctx.beginPath();ctx.moveTo(i*20*sx,0);ctx.lineTo(i*20*sx,H);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*20*sy);ctx.lineTo(W,i*20*sy);ctx.stroke()}
+  ctx.font=(W<420?"10px":"12px")+" Inter,sans-serif";ctx.textBaseline="top";
+  for(let i=0;i<25;i++){const c=i%5,r=Math.floor(i/5),M=zs[i].M;ctx.fillStyle="#7d889c";ctx.fillText((W<420?"Z":"Zone ")+(i+1),c*20*sx+6,r*20*sy+5);if(M>1){ctx.fillStyle="#ffc266";ctx.fillText(M.toFixed(2)+"×",c*20*sx+6,r*20*sy+(W<420?17:20))}}
+  const t=Math.min(1,(performance.now()-lastTick)/(interval()*.9));
+  const pos=v=>({x:(v.px+(v.x-v.px)*t)*sx,y:(v.py+(v.y-v.py)*t)*sy});
+  // routes
+  ctx.lineWidth=1.6;
+  for(const v of S.drivers){if(!v.req)continue;const p=pos(v),q=v.req,tg=v.status==="RESERVED"?q.p:q.d;ctx.strokeStyle=v.status==="RESERVED"?"rgba(255,170,0,.55)":"rgba(0,168,255,.6)";ctx.setLineDash(v.status==="RESERVED"?[4,4]:[]);ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(tg.x*sx,tg.y*sy);ctx.stroke();if(v.status==="ON_TRIP"){ctx.setLineDash([]);ctx.strokeStyle="#00a8ff";ctx.strokeRect(q.d.x*sx-3,q.d.y*sy-3,6,6)}}
+  ctx.setLineDash([]);
+  for(const q of S.reqs){if(q.status!=="QUEUED"&&q.status!=="ASSIGNED")continue;ctx.fillStyle="#ff4757";ctx.fillRect(q.p.x*sx-3.5,q.p.y*sy-3.5,7,7);if(q.type==="PRIORITY"){ctx.strokeStyle="#ff4757";ctx.strokeRect(q.p.x*sx-6,q.p.y*sy-6,12,12)}}
+  const col={AVAILABLE:"#00f59b",RESERVED:"#ffaa00",ON_TRIP:"#00a8ff",OFFLINE:"#5d6680"};
+  for(const v of S.drivers){const p=pos(v);ctx.beginPath();ctx.arc(p.x,p.y,W<420?4.5:6,0,7);ctx.fillStyle=col[v.status];ctx.fill();ctx.lineWidth=2;ctx.strokeStyle="#0d0f17";ctx.stroke()}
+  requestAnimationFrame(draw);
+}
+const interval=()=>700/parseFloat($("spd").value);
+function loop(){clearInterval(timer);timer=running?setInterval(tick,interval()):null;$("play").textContent=running?"Pause":"Start";$("play").className="btn"+(running?"":" go")}
+$("play").onclick=()=>{running=!running;loop()};
+$("step").onclick=()=>{running=false;loop();tick()};
+$("reset").onclick=()=>{reset();loop()};
+$("scn").onchange=()=>{reset();loop()};
+$("seed").onchange=()=>{reset();loop()};
+$("spd").onchange=loop;
+$("strat").onchange=()=>log("SIM","Strategy switched to "+($("strat").value==="WF"?"weighted fair":"nearest driver"),"C");
+$("rush").onclick=()=>{for(let i=0;i<12;i++)newReq(false,{x:41+S.r()*18,y:41+S.r()*18});log("SHOCK","Rush-hour spike: 12 requests injected into zone 13","X");render()};
+$("mob").onclick=()=>{let k=0;for(const v of S.drivers)if(v.status==="OFFLINE"&&k<5){v.status="AVAILABLE";v.x=v.px=42+S.r()*16;v.y=v.py=42+S.r()*16;v.idleSince=S.tick;k++}
+  for(;k<5;k++){const x=42+S.r()*16,y=42+S.r()*16;S.drivers.push({id:101+S.drivers.length,name:NAMES[S.drivers.length%25],veh:VEH[k%4],x,y,px:x,py:y,status:"AVAILABLE",idleSince:S.tick,trips:0,earn:0,req:null})}
+  log("FLEET","5 reserve drivers mobilised into zone 13","A");render()};
+cv.addEventListener("click",e=>{const b=cv.getBoundingClientRect(),x=(e.clientX-b.left)/b.width*100,y=(e.clientY-b.top)/b.height*100;if(x<0||x>100||y<0||y>100)return;const q=newReq(true,{x,y});$("why").innerHTML=`You requested <b>ride #${q.id}</b> in zone ${q.zone}. Quote locked at <b>${esc(inr(q.fare))}</b> (base ${esc(inr(q.base))} × ${q.M.toFixed(2)}). It joins the queue and is dispatched on the next tick.`;render()});
+reset();loop();draw();
+
+/* ---------- dispatch duel ---------- */
+const duel={A:{eta:5,idle:5},B:{eta:6,idle:30}};
+const scD=d=>d.eta-0.05*Math.min(d.idle,30);
+$("duel").innerHTML=["A","B"].map(k=>{const d=duel[k];return`<div class="drv" id="c${k}"><h3>Driver ${k}</h3>
+  <div class="rng"><label for="e${k}">Pickup ETA</label><output id="oe${k}"></output><input type="range" id="e${k}" min="1" max="15" value="${d.eta}" data-k="${k}" data-f="eta"></div>
+  <div class="rng"><label for="i${k}">Idle time</label><output id="oi${k}"></output><input type="range" id="i${k}" min="0" max="60" value="${d.idle}" data-k="${k}" data-f="idle"></div>
+  <span class="small mute">Weighted score</span><div class="score" id="s${k}"></div><span class="small mute" id="w${k}"></span></div>`}).join("");
+function drawDuel(){
+  const nd=duel.A.eta<=duel.B.eta?"A":"B", wf=scD(duel.A)<=scD(duel.B)?"A":"B";
+  for(const k of ["A","B"]){const d=duel[k];$("oe"+k).textContent=d.eta+" min";$("oi"+k).textContent=d.idle+" min";$("s"+k).textContent=scD(d).toFixed(2);$("w"+k).textContent=d.eta+" − 0.05 × "+Math.min(d.idle,30)+" = "+scD(d).toFixed(2);$("c"+k).className="drv"+(nd===k?" win-n":"")+(wf===k?" win-w":"")}
+  $("vn").textContent="Driver "+nd+" ("+duel[nd].eta+" min away)";
+  $("vw").textContent="Driver "+wf+" (score "+scD(duel[wf]).toFixed(2)+")";
+}
+$("duel").addEventListener("input",e=>{const t=e.target;if(!t.dataset.k)return;duel[t.dataset.k][t.dataset.f]=+t.value;drawDuel()});
+drawDuel();
+
+/* ---------- fare calculator ---------- */
+const P={D:$("pD"),S:$("pS"),K:$("pK"),M:$("pM")},curve=$("curve");
+function calc(){
+  const D=+P.D.value,Sv=+P.S.value,K=+P.K.value,Mi=+P.M.value,{R,M}=surgeOf(D,Sv),b=round2(baseFare(K,Mi)),f=round2(b*M);
+  $("oD").textContent=D;$("oS").textContent=Sv;$("oK").textContent=K.toFixed(2)+" km";$("oM").textContent=Mi+" min";
+  $("fare").textContent=inr(f);
+  $("sum").innerHTML=`R = ${D} / max(${Sv}, 1) = ${R.toFixed(2)}<br>M = clamp(1 + 0.25 × (${R.toFixed(2)} − 1), 1.0, 2.5) = ${M.toFixed(2)}×<br>Base = ₹40 + ₹12 × ${K.toFixed(2)} + ₹2 × ${Mi} = ${inr(b)}<br>Fare = ${inr(b)} × ${M.toFixed(2)} = <b style="color:var(--green)">${inr(f)}</b>`;
+  drawCurve(R,M);
+}
+function drawCurve(R,M){
+  const W=curve.clientWidth,H=curve.clientHeight;if(!W)return;
+  const l=40,r=16,t=14,b=34,xm=8,X=v=>l+(W-l-r)*Math.min(v,xm)/xm,Y=v=>t+(H-t-b)*(1-(v-1)/1.6);
+  let path="";for(let i=0;i<=80;i++){const v=i/10;path+=(i?"L":"M")+X(v).toFixed(1)+","+Y(surgeOf(v,1).M).toFixed(1)}
+  const ticks=W<520?[0,4,8]:[0,1,2,3,4,5,6,7,8];
+  curve.innerHTML=`${[1,1.5,2,2.5].map(v=>`<line x1="${l}" x2="${W-r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#232a3d"/><text x="${l-8}" y="${Y(v)+4}" text-anchor="end">${v.toFixed(1)}×</text>`).join("")}
+  ${ticks.map(v=>`<text x="${X(v)}" y="${H-b+18}" text-anchor="middle">${v}</text>`).join("")}<text x="${W-r}" y="${H-4}" text-anchor="end">demand ÷ supply${R>xm?" (capped view)":""}</text>
+  <path d="${path}" fill="none" stroke="#00a8ff" stroke-width="2.5"/>
+  <line x1="${X(R)}" x2="${X(R)}" y1="${Y(M)}" y2="${H-b}" stroke="#00f59b" stroke-dasharray="3 3"/>
+  <circle cx="${X(R)}" cy="${Y(M)}" r="6" fill="#00f59b" stroke="#161926" stroke-width="2"/>
+  <text x="${Math.min(X(R)+10,W-r-60)}" y="${Math.max(Y(M)-10,t+12)}" style="fill:#e6ebf2;font-weight:600">${M.toFixed(2)}×</text>`;
+}
+Object.values(P).forEach(i=>i.addEventListener("input",calc));
+$("pReset").onclick=()=>{P.D.value=12;P.S.value=3;P.K.value=6.25;P.M.value=18;calc()};
+const cro=new ResizeObserver(calc);cro.observe(curve);
+
+/* ---------- race ---------- */
+$("raceBtn").onclick=()=>{
+  const lanes=[...document.querySelectorAll("#race ol")].map(o=>[...o.children]);
+  lanes.flat().forEach(li=>li.classList.remove("on"));
+  const order=[[0,0],[1,0],[0,1],[1,1],[0,2],[0,3],[1,2],[1,3],[0,4],[1,4]];
+  const fast=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  order.forEach(([l,i],n)=>setTimeout(()=>lanes[l][i].classList.add("on"),fast?0:n*380));
+};
+document.querySelectorAll("#race li").forEach(li=>li.classList.add("on"));
+
+/* ---------- tables ---------- */
+const stack=[["Language","Java 21 LTS","Records, pattern matching, collections"],["Backend","Spring Boot 3.3.5","REST endpoints, dependency injection, validation"],["Persistence","Raw JDBC + HikariCP","PreparedStatements, explicit transactions, no ORM"],["Database","MySQL 8 / H2 (MySQL mode)","Row-level locks, foreign keys, composite indexes"],["Migrations","Flyway 10","Schema versioning and city seed data"],["Desktop","JavaFX 21","Operator console and vector city canvas"],["API docs","OpenAPI 3 / Swagger UI","Interactive explorer at /swagger-ui.html"],["Testing","JUnit 5 + Mockito","Unit, integration and concurrency tests"]];
+$("stackT").innerHTML=stack.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join("")}</tr>`).join("");
+const tests=[["CoordinateTest","Coordinate validation and distance",3],["DriverStateMachineTest","Valid and invalid driver transitions",4],["PricingEngineTest","Surge clamp and fare arithmetic",4],["DispatchStrategyTest","Nearest vs weighted fair selection",2],["RideRequestComparatorTest","Priority ordering and aging",2],["DriverDaoIntegrationTest","Real JDBC reads and writes",1],["ConcurrentDispatchTest","Two threads, one driver",1]];
+$("testsT").innerHTML=tests.map(([a,b,c])=>`<tr><td><code>${a}</code></td><td>${b}</td><td class="r">${c}</td></tr>`).join("")+`<tr><td><b>Total</b></td><td class="pass">0 failures, 0 errors</td><td class="r"><b>17</b></td></tr>`;
+const cases=[["Normal ride dispatch","STANDARD request, pickup (49, 51) → (80, 85)","Driver #113 at the pickup reserved; QUEUED → ASSIGNED"],["Queue under low supply","LOW_SUPPLY, zone drivers all reserved, 5 new requests","Requests stay queued; after 15 ticks, overdue ones EXPIRED"],["Dynamic surge pricing","D = 12, S = 3, 6.25 km, 18 min","1.75× surge, ₹151.00 → ₹264.25, unchanged after assignment"],["Ride lifecycle","Ride assigned to Driver #101","Moves to pickup, ON_TRIP, to destination, COMPLETED, driver AVAILABLE"],["Concurrent assignment","Two threads reserve the same driver","One commit, one rejected; no duplicate assignment"],["Database persistence","10 rides completed, server restarted","History, trip counts and ₹2,450.00 earnings retained"]];
+$("casesT").innerHTML=cases.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join("")}<td class="pass">Pass</td></tr>`).join("");
+const errs=[["Pickup at X = 105.5","Coordinates must be within 0 to 100"],["Cancel ride #1001 after COMPLETED","A completed ride cannot become cancelled"],["Set driver #105 ON_TRIP → OFFLINE","The active trip is preserved; the transition is invalid"],["Fetch a ride id that does not exist","A structured not-found error instead of empty data"]];
+$("errT").innerHTML=errs.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join("")}</tr>`).join("");
+const api=[["GET /api/v1/simulation/state","Clock, scenario, run totals and revenue"],["POST /api/v1/simulation/start · pause · resume","Control the background clock"],["POST /api/v1/simulation/step?ticks=1","Advance N simulated minutes"],["POST /api/v1/simulation/reset","New run with a scenario and seed"],["POST /api/v1/simulation/inject/rush-hour","Demand spike in one zone"],["GET · POST /api/v1/drivers","List or register drivers"],["POST /api/v1/rides","Create a ride with a locked quote"],["GET /api/v1/rides/queued · active","Queue and trips in progress"],["GET /api/v1/analytics/heatmap","Per-zone demand, supply and surge"],["GET · PUT /api/v1/pricing/config","Read or change pricing parameters"]];
+$("apiT").innerHTML=api.map(([a,b])=>`<tr><td><code>${esc(a)}</code></td><td>${esc(b)}</td></tr>`).join("");
+
+/* ---------- benchmark ---------- */
+const bench=[["100 drivers, 500 requests",1.42,2.18],["1,000 drivers, 5,000 requests",16.80,24.50],["5,000 drivers, 20,000 requests",128.40,184.20]];
+$("bench").innerHTML=bench.map(([n,a,b])=>`<div class="brow"><h3>${n} <span class="mute small">· +${Math.round((b/a-1)*100)}%</span></h3>
+<div class="bar" title="Nearest driver: ${a.toFixed(2)} ms"><span>Nearest</span><span class="t"><i style="width:${a/b*100}%;background:var(--b2)"></i></span><span class="v">${a.toFixed(2)} ms</span></div>
+<div class="bar" title="Weighted fair: ${b.toFixed(2)} ms"><span>Weighted fair</span><span class="t"><i style="width:100%;background:var(--g2)"></i></span><span class="v">${b.toFixed(2)} ms</span></div></div>`).join("");
+
+/* ---------- galleries ---------- */
+const shots=[["dashboard","Operations overview","Tick 153, 10:33 simulated: 20 drivers, 7 available, 13 active trips, ₹107,650 simulated revenue."],["city","City simulator and kinematics","Drivers coloured by state move across the 25 zones toward pickups and destinations."],["dispatch","Dispatch control center","Queued requests, candidate scoring breakdown and the two strategy formulas."],["surge","Surge pricing monitor","Demand, supply and multiplier for each of the 25 zones, with the Section 3.6 verifier."],["fleet","Fleet and driver management","Register drivers, toggle availability, and see trips and earnings."],["analytics","Simulation analytics and reports","Scenario controls, operational metrics and CSV export."]];
+$("gal").innerHTML=shots.map(([f,t,c])=>`<figure><button type="button" data-img="img/${f}.webp" data-cap="${esc(t+". "+c)}"><img src="img/${f}.webp" alt="${esc(t)} screen" loading="lazy" width="1600" height="800" style="height:auto"></button><figcaption><b>${t}</b><span class="mute">${c}</span></figcaption></figure>`).join("");
+const docs=[["usecase","Use case diagram"],["activity","Ride lifecycle activity flow"],["er","Entity relationship diagram"],["structure","Multi-module Maven structure"]];
+$("docs").innerHTML=docs.map(([f,t])=>`<figure><button type="button" data-img="img/${f}.webp" data-cap="${esc(t)}"><img src="img/${f}.webp" alt="${esc(t)}" loading="lazy"></button><figcaption>${t}</figcaption></figure>`).join("");
+document.addEventListener("click",e=>{const b=e.target.closest("[data-img]");if(!b)return;$("lbImg").src=b.dataset.img;$("lbImg").alt=b.dataset.cap;$("lbCap").textContent=b.dataset.cap;$("lb").showModal()});
+$("lb").addEventListener("click",e=>{if(e.target===$("lb"))$("lb").close()});
+const gal=$("gal"),go=d=>{const f=gal.querySelector("figure");gal.scrollBy({left:d*(f.offsetWidth+16),behavior:"smooth"})};
+$("gPrev").onclick=()=>go(-1);$("gNext").onclick=()=>go(1);
+gal.addEventListener("keydown",e=>{if(e.key==="ArrowRight")go(1);if(e.key==="ArrowLeft")go(-1)});
+document.querySelectorAll(".stack").forEach(t=>{const h=[...t.tHead.rows[0].cells].map(c=>c.textContent);for(const r of t.tBodies[0].rows)[...r.cells].forEach((c,i)=>c.dataset.l=h[i]||"")});
+document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText($(b.dataset.copy).textContent);b.textContent="Copied"}catch(err){b.textContent="Select and copy"}setTimeout(()=>b.textContent="Copy",1600)});
+}
+</script>
+</body>
+</html>
