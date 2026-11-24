@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RideFlow</title>
+<meta name="description" content="RideFlow: an intelligent ride dispatch, fleet management and dynamic pricing simulator built with Java 21, Spring Boot, JDBC, MySQL and JavaFX. Try the live city simulator in your browser.">
+<meta property="og:title" content="RideFlow: ride dispatch and dynamic pricing simulator">
+<meta property="og:description" content="Live city simulator, dispatch scoring, surge pricing and concurrency-safe booking. UCS553 mini-project, TIET Patiala.">
+<meta name="theme-color" content="#0b0c10">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect x='1' y='1' width='26' height='26' rx='7' fill='%23161926'/%3E%3Cpath d='M6 20 L12 12 L17 16 L22 8' fill='none' stroke='%2300a8ff' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='22' cy='8' r='3' fill='%2300f59b'/%3E%3Ccircle cx='6' cy='20' r='2.4' fill='%23ffaa00'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
@@ -15,6 +20,7 @@
    LAYOUT title band across the top, simulator full width beneath (map left, controls/queue/feed right); stacks on phones */
 :root{color-scheme:dark;--bg:#0b0c10;--bg2:#12141f;--panel:#161926;--panel2:#1c2030;--line:#2b3145;--ink:#e6ebf2;--mute:#9aa6b8;--green:#00f59b;--blue:#00a8ff;--orange:#ffaa00;--red:#ff4757;--gray:#5d6680;--g2:#14c784;--b2:#3a96e0}
 *{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
 html{scroll-behavior:smooth;scroll-padding-top:72px}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Inter,system-ui,sans-serif;overflow-x:clip}
 h1,h2,h3{font-family:"Space Grotesk",Inter,sans-serif;line-height:1.08;letter-spacing:-.02em;margin:0;text-wrap:balance}
@@ -158,17 +164,33 @@ dialog img{max-height:82vh;margin:0 auto}
 footer{padding:28px max(5vw,16px);border-top:1px solid var(--line);color:var(--mute);font-size:14px}
 footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 .copy{float:right;min-height:36px;font-size:13px;padding:0 10px;margin:-4px 0 6px 8px}
+.menu{display:none;margin-left:auto}
+.links a.on{color:var(--ink);background:var(--panel)}
+.tour{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 18px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,#0f2a22,#122036)}
+.tour h3{font-size:18px;margin:0 0 4px}
+.tour p{margin:0;color:#c8d1de;font-size:15px;max-width:80ch}
+.tour .prog{font-size:13px;color:var(--green);font-weight:600;margin-bottom:2px}
+.tour .row{justify-content:flex-end}
+.flash{animation:flash 1.2s ease-out 1}
+@keyframes flash{0%{box-shadow:0 0 0 3px var(--green)}100%{box-shadow:0 0 0 3px transparent}}
+.totop{position:fixed;right:16px;bottom:16px;z-index:15;width:48px;height:48px;border-radius:50%;padding:0;opacity:0;pointer-events:none;transition:opacity .2s}
+.totop.show{opacity:1;pointer-events:auto}
+.kpi{cursor:help}
+.howto{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px}
+.howto .card h3{font-size:17px}
 @media(max-width:980px){.cbody{grid-template-columns:minmax(0,1fr)}.mapbox{border-right:0;border-bottom:1px solid var(--line)}.map{max-width:640px}.steps{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:22px}.steps::before{display:none}.docs{grid-template-columns:repeat(2,minmax(0,1fr))}.team{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.herohead,.grid2,.calc{grid-template-columns:minmax(0,1fr)}.qs{grid-template-columns:minmax(0,1fr)}}
-@media(max-width:600px){.links{display:none}.duel,.verdict,.race,.duo{grid-template-columns:minmax(0,1fr)}.steps{grid-template-columns:minmax(0,1fr)}.bar{grid-template-columns:7em minmax(0,1fr) 4.8em}table{font-size:13px}th,td{padding:6px 4px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:3px 0}.stack td::before{content:attr(data-l);color:var(--mute)}.kpi{padding:10px}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.lane li{transition:none}}
+@media(max-width:760px){.tour{grid-template-columns:minmax(0,1fr)}.tour .row{justify-content:flex-start}.howto{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.menu{display:inline-flex}.links{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:var(--bg);border-bottom:1px solid var(--line);padding:8px max(5vw,16px) 14px;margin:0}.links.open{display:flex}.links a{padding:12px 10px}nav.top .wrap{position:relative}.duel,.verdict,.race,.duo{grid-template-columns:minmax(0,1fr)}.steps{grid-template-columns:minmax(0,1fr)}.bar{grid-template-columns:7em minmax(0,1fr) 4.8em}table{font-size:13px}th,td{padding:6px 4px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:3px 0}.stack td::before{content:attr(data-l);color:var(--mute)}.kpi{padding:10px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.flash{animation:none}.lane li{transition:none}}
 </style>
 </head>
 <body>
 <nav class="top" aria-label="Sections"><div class="wrap">
   <a class="brand" href="#sim"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect x="1" y="1" width="26" height="26" rx="7" fill="#161926" stroke="#2b3145"/><path d="M6 20 L12 12 L17 16 L22 8" fill="none" stroke="#00a8ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="22" cy="8" r="3" fill="#00f59b"/><circle cx="6" cy="20" r="2.4" fill="#ffaa00"/></svg>RideFlow</a>
-  <div class="links scroll">
-    <a href="#how">How it works</a><a href="#dispatch">Dispatch</a><a href="#pricing">Pricing</a><a href="#concurrency">Concurrency</a><a href="#architecture">Architecture</a><a href="#screens">Screens</a><a href="#results">Results</a><a href="#run">Run it</a><a href="#team">Team</a>
+  <button class="btn menu" id="menu" type="button" aria-expanded="false" aria-controls="links">Menu</button>
+  <div class="links scroll" id="links">
+    <a href="#sim">Live demo</a><a href="#how">How it works</a><a href="#dispatch">Dispatch</a><a href="#pricing">Pricing</a><a href="#concurrency">Concurrency</a><a href="#architecture">Architecture</a><a href="#screens">Screens</a><a href="#results">Results</a><a href="#run">Run it</a><a href="#team">Team</a>
   </div>
 </div></nav>
 
@@ -177,11 +199,15 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
     <h1>RideFlow<span>Intelligent ride dispatch, fleet management and dynamic pricing simulator</span></h1>
     <div class="herotext">
       <p>A Java 21 operations simulator for a fictional 20&nbsp;km city: which driver gets the ride, what the trip costs, and what stops one driver being booked twice. Built with Spring Boot, raw JDBC, MySQL and JavaFX.</p>
-      <div class="row"><a class="btn go" href="https://github.com/shashwatt22/rideflow">View source on GitHub</a><a class="btn" href="#how">How it works</a></div>
+      <div class="row"><button class="btn go" type="button" id="tourStart">Start the guided demo</button><a class="btn" href="https://github.com/shashwatt22/rideflow">Source code on GitHub</a></div>
     </div>
   </div>
 
   <section class="console" aria-label="Live city simulator">
+    <div class="tour" id="tour" aria-live="polite">
+      <div><div class="prog" id="tProg">Live demo</div><h3 id="tTitle">This city is running right now</h3><p id="tText">Coloured dots are drivers, red squares are riders waiting. Take the guided demo for a 6-step walkthrough, or click anywhere on the map to request a ride yourself.</p></div>
+      <div class="row"><button class="btn" id="tBack" type="button" hidden>Back</button><button class="btn go" id="tNext" type="button">Start demo</button><button class="btn" id="tExit" type="button" hidden>Exit</button></div>
+    </div>
     <div class="kpis" id="kpis"></div>
     <div class="cbody">
       <div class="mapbox">
@@ -353,6 +379,11 @@ mvn spring-boot:run          # http://localhost:8080
 cd ../rideflow-desktop
 mvn javafx:run               # operator console</code></pre>
       <p class="small mute" style="margin-top:10px">On Windows, <code>scripts\run_all.cmd</code> starts the server and the console together.</p>
+      <h3 style="margin-top:24px">Open this website on localhost</h3>
+      <button class="btn copy" type="button" data-copy="webcmd">Copy</button>
+      <pre id="webcmd"><code>scripts\run_website.cmd                 # Windows: opens http://localhost:8000
+python -m http.server 8000 -d docs      # any OS, then visit http://localhost:8000</code></pre>
+      <p class="small mute" style="margin-top:10px">The site has no build step: double-clicking <code>docs/index.html</code> also works offline, apart from the web fonts.</p>
     </div>
     <div>
       <h3>REST API highlights</h3>
@@ -375,6 +406,7 @@ mvn javafx:run               # operator console</code></pre>
 
 <footer><div class="wrap"><span>RideFlow · Java 21 · Spring Boot · JDBC · MySQL · JavaFX</span><a href="https://github.com/shashwatt22/rideflow">github.com/shashwatt22/rideflow</a></div></footer>
 
+<a class="btn totop" id="totop" href="#sim" aria-label="Back to top">↑</a>
 <dialog id="lb"><form method="dialog" style="text-align:right;margin-bottom:8px"><button class="btn" type="submit">Close</button></form><img id="lbImg" alt=""><p id="lbCap" class="small mute" style="margin:8px 4px 0"></p></dialog>
 
 <script>
@@ -458,8 +490,8 @@ function render(){
   const av=S.drivers.filter(v=>v.status==="AVAILABLE").length, on=S.drivers.filter(v=>v.status!=="OFFLINE").length;
   const qd=queue(), act=S.reqs.filter(q=>q.status==="ASSIGNED"||q.status==="IN_PROGRESS").length;
   const zs=zoneStats(), avgM=zs.reduce((a,b)=>a+b.M,0)/25, maxM=Math.max(...zs.map(z=>z.M));
-  const k=[["Tick "+S.tick,clock(S.tick)+" simulated",""],[av+" / "+on,"Drivers available","g"],[qd.length,"Queued","o"],[act,"Active trips","bl"],[S.completed,"Completed",""],[S.expired,"Expired",""],[avgM.toFixed(2)+"×","Avg surge (peak "+maxM.toFixed(1)+"×)",""],["₹"+Math.round(S.revenue).toLocaleString("en-IN"),"Sim revenue","g"]];
-  $("kpis").innerHTML=k.map(([b,s,c])=>`<div class="kpi ${c}"><b>${esc(b)}</b><small>${esc(s)}</small></div>`).join("");
+  const k=[["Tick "+S.tick,clock(S.tick)+" simulated","","One tick is one simulated minute"],[av+" / "+on,"Drivers available","g","Available drivers out of drivers on shift"],[qd.length,"Queued","o","Requests waiting for a driver, ordered by priority score"],[act,"Active trips","bl","Drivers heading to a pickup or carrying a rider"],[S.completed,"Completed","","Trips finished in this run"],[S.expired,"Expired","","Requests that waited over 15 minutes with no eligible driver"],[avgM.toFixed(2)+"×","Avg surge (peak "+maxM.toFixed(1)+"×)","","Average surge multiplier over the 25 zones, and the highest zone"],["₹"+Math.round(S.revenue).toLocaleString("en-IN"),"Sim revenue","g","Sum of locked fares for completed trips"]];
+  $("kpis").innerHTML=k.map(([b,s,c,t])=>`<div class="kpi ${c}" title="${esc(t)}"><b>${esc(b)}</b><small>${esc(s)}</small></div>`).join("");
   $("qn").textContent=qd.length?qd.length+" waiting":"";
   $("queue").innerHTML=qd.length?qd.slice(0,6).map(q=>`<li><span class="tag ${q.type==="PRIORITY"?"p":""}">${q.type==="PRIORITY"?"Priority":"Standard"}</span><span>#${q.id} · zone ${q.zone} · waited ${S.tick-q.created} min<br><span class="mute small">priority score ${prioScore(q)}</span></span><span class="num">${esc(inr(q.fare))}</span></li>`).join(""):`<li><span></span><span class="mute">Queue is empty. Every request has a driver.</span><span></span></li>`;
   $("feed").innerHTML=S.events.slice(0,40).map(e=>`<li><span class="t">[${e.t}]</span> <span class="${e.cls}">${esc(e.type)}</span> ${esc(e.msg)}</li>`).join("");
@@ -575,6 +607,38 @@ const bench=[["100 drivers, 500 requests",1.42,2.18],["1,000 drivers, 5,000 requ
 $("bench").innerHTML=bench.map(([n,a,b])=>`<div class="brow"><h3>${n} <span class="mute small">· +${Math.round((b/a-1)*100)}%</span></h3>
 <div class="bar" title="Nearest driver: ${a.toFixed(2)} ms"><span>Nearest</span><span class="t"><i style="width:${a/b*100}%;background:var(--b2)"></i></span><span class="v">${a.toFixed(2)} ms</span></div>
 <div class="bar" title="Weighted fair: ${b.toFixed(2)} ms"><span>Weighted fair</span><span class="t"><i style="width:100%;background:var(--g2)"></i></span><span class="v">${b.toFixed(2)} ms</span></div></div>`).join("");
+
+
+/* ---------- guided demo ---------- */
+const flash=id=>{const e=$(id);e.classList.remove("flash");void e.offsetWidth;e.classList.add("flash")};
+const setSel=(id,v)=>{$(id).value=v};
+const TOUR=[
+ {t:"A live city of 20 drivers",x:"The 100×100 city is split into 25 zones. Green drivers are free, orange ones are driving to a pickup, blue ones carry a rider. Every tick is one simulated minute.",go:()=>{setSel("scn","NORMAL");setSel("strat","WF");reset();running=true;loop();flash("map")}},
+ {t:"A rider requests a trip",x:"We just placed a STANDARD request at (49, 51). RideFlow validated it and locked the fare straight away from distance, duration and the zone's surge. The fare never changes after this.",go:()=>{const q=newReq(true,{x:49,y:51});S.lastWhy=null;$("why").innerHTML=`Ride <b>#${q.id}</b> requested in zone ${q.zone}. Fare locked at <b>${esc(inr(q.fare))}</b> (base ${esc(inr(q.base))} × ${q.M.toFixed(2)}).`;render();flash("why")}},
+ {t:"The dispatcher picks a driver",x:"On the next tick, every available driver within 10 km is scored: pickup ETA minus a small, capped credit for idle time. The lowest score wins and is reserved in one database transaction. The box below explains the choice.",go:()=>{running=false;loop();tick();flash("why")}},
+ {t:"Rush hour hits downtown",x:"Twelve requests just arrived in zone 13. Demand now outruns supply there, so the surge multiplier rises (watch the orange heat on the map) and new quotes cost more. The queue orders riders by type plus waiting time.",go:()=>{$("rush").click();running=true;loop();flash("queue")}},
+ {t:"Send more drivers",x:"Mobilising five reserve drivers into zone 13 adds supply. As they absorb the queue, the demand-to-supply ratio falls and surge cools back toward 1.0×.",go:()=>{$("mob").click();flash("map")}},
+ {t:"Try it yourself",x:"Switch to Low supply or High demand to see requests expire, or compare Weighted fair with Nearest driver. Click the map to add rides. The sections below explain each rule with interactive examples.",go:()=>{flash("scn")}}
+];
+let ti=-1;
+function showTour(){
+  const on=ti>=0;$("tBack").hidden=ti<=0;$("tExit").hidden=!on;
+  if(!on){$("tProg").textContent="Live demo";$("tTitle").textContent="This city is running right now";$("tText").textContent="Coloured dots are drivers, red squares are riders waiting. Take the guided demo for a 6-step walkthrough, or click anywhere on the map to request a ride yourself.";$("tNext").textContent="Start demo";return}
+  const st=TOUR[ti];$("tProg").textContent="Step "+(ti+1)+" of "+TOUR.length;$("tTitle").textContent=st.t;$("tText").textContent=st.x;$("tNext").textContent=ti===TOUR.length-1?"Explore the sections":"Next step";
+}
+function goTour(n){if(n>=TOUR.length){ti=-1;showTour();location.hash="how";return}ti=n;TOUR[ti].go();showTour()}
+$("tNext").onclick=()=>goTour(ti+1);
+$("tBack").onclick=()=>goTour(Math.max(0,ti-1));
+$("tExit").onclick=()=>{ti=-1;showTour()};
+$("tourStart").onclick=()=>{document.getElementById("tour").scrollIntoView({behavior:"smooth",block:"start"});goTour(0)};
+
+/* ---------- navigation ---------- */
+$("menu").onclick=()=>{const o=$("links").classList.toggle("open");$("menu").setAttribute("aria-expanded",o)};
+$("links").addEventListener("click",e=>{if(e.target.tagName==="A"){$("links").classList.remove("open");$("menu").setAttribute("aria-expanded",false)}});
+const navLinks=[...document.querySelectorAll("#links a")];
+const spy=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting)navLinks.forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+e.target.id))},{rootMargin:"-40% 0px -55% 0px"});
+document.querySelectorAll("header[id],section.band[id]").forEach(x=>spy.observe(x));
+addEventListener("scroll",()=>$("totop").classList.toggle("show",scrollY>900),{passive:true});
 
 /* ---------- galleries ---------- */
 const shots=[["dashboard","Operations overview","Tick 153, 10:33 simulated: 20 drivers, 7 available, 13 active trips, ₹107,650 simulated revenue."],["city","City simulator and kinematics","Drivers coloured by state move across the 25 zones toward pickups and destinations."],["dispatch","Dispatch control center","Queued requests, candidate scoring breakdown and the two strategy formulas."],["surge","Surge pricing monitor","Demand, supply and multiplier for each of the 25 zones, with the Section 3.6 verifier."],["fleet","Fleet and driver management","Register drivers, toggle availability, and see trips and earnings."],["analytics","Simulation analytics and reports","Scenario controls, operational metrics and CSV export."]];
