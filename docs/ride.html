@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RideFlow Rider</title>
+<meta name="description" content="Book a simulated ride in the RideFlow city: pick a route, get a locked fare with live surge, get matched to a driver and track the trip to your receipt.">
+<meta name="theme-color" content="#0b0c10">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect x='1' y='1' width='26' height='26' rx='7' fill='%23161926'/%3E%3Cpath d='M6 20 L12 12 L17 16 L22 8' fill='none' stroke='%2300a8ff' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='22' cy='8' r='3' fill='%2300f59b'/%3E%3Ccircle cx='6' cy='20' r='2.4' fill='%23ffaa00'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* VOICE  a shipped rider app: calm, clear, one task per screen
+   IDEA   the passenger side of the RideFlow console, same city, same rules, same palette
+   PICTURE the live city map, large, with your pickup, drop, route and your driver moving
+   COLOUR console ground #0b0c10, panel #161926, signal green for go, blue for your trip, orange for surge
+   TYPE   Space Grotesk for figures and headings + Inter for text
+   LAYOUT laptop: booking panel left, map right; phone: map on top, panel as a sheet below */
+:root{color-scheme:dark;--bg:#0b0c10;--bg2:#12141f;--panel:#161926;--panel2:#1c2030;--line:#2b3145;--ink:#e6ebf2;--mute:#9aa6b8;--green:#00f59b;--blue:#00a8ff;--orange:#ffaa00;--red:#ff4757;--gray:#5d6680}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Inter,system-ui,sans-serif;display:flex;flex-direction:column;overflow-x:clip}
+h1,h2,h3{font-family:"Space Grotesk",Inter,sans-serif;letter-spacing:-.02em;line-height:1.1;margin:0}
+header{display:flex;align-items:center;gap:14px;padding:10px max(3vw,16px);border-bottom:1px solid var(--line);flex:none}
+.brand{display:flex;align-items:center;gap:10px;font:700 20px "Space Grotesk",sans-serif;color:var(--ink);text-decoration:none}
+.brand small{font:500 14px Inter;color:var(--green);background:#0f2a22;padding:2px 8px;border-radius:6px}
+header nav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font:600 15px Inter,sans-serif;cursor:pointer;text-decoration:none}
+.btn:hover{border-color:#46506d}
+.btn:focus-visible,select:focus-visible,.opt:focus-visible,.star:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.btn.go{background:var(--green);border-color:var(--green);color:#04130c}
+.btn.big{width:100%;min-height:54px;font-size:17px}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--red)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+main{flex:1;display:grid;grid-template-columns:minmax(320px,420px) minmax(0,1fr);min-height:0}
+.panel{border-right:1px solid var(--line);background:var(--panel);overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+.mapwrap{position:relative;min-height:0;padding:14px;display:flex;flex-direction:column;gap:10px}
+.map{position:relative;flex:1;min-height:300px}
+.map canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:14px;cursor:crosshair}
+.maphint{position:absolute;left:12px;top:12px;background:rgba(11,12,16,.88);border:1px solid var(--line);padding:8px 12px;border-radius:10px;font-size:14px;pointer-events:none}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--mute)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.field{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:center}
+.field .dot{width:12px;height:12px;border-radius:50%;justify-self:center}
+.field label{display:block;font-size:13px;color:var(--mute);margin-bottom:2px}
+select{width:100%;min-height:46px;font:16px Inter,sans-serif;background:var(--bg2);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:0 10px}
+.pin{min-height:46px;padding:0 12px;font-size:14px}
+.pin[aria-pressed=true]{background:var(--blue);color:#021220;border-color:var(--blue)}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.opt{all:unset;cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--bg2);display:flex;flex-direction:column;gap:2px}
+.opt b{font:600 17px "Space Grotesk"}
+.opt span{font-size:13px;color:var(--mute)}
+.opt .price{font:600 20px "Space Grotesk";color:var(--ink);margin-top:4px;font-variant-numeric:tabular-nums}
+.opt[aria-checked=true]{border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:14px}
+.rows{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;font-size:15px}
+.rows span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rows .tot{font:700 22px "Space Grotesk";padding-top:8px;border-top:1px solid var(--line);margin-top:4px}
+.mute{color:var(--mute)}.small{font-size:14px}
+.surge{display:inline-block;font-size:13px;font-weight:600;padding:2px 8px;border-radius:6px;background:#3b2a07;color:var(--orange)}
+.surge.ok{background:#0f2a22;color:var(--green)}
+.status h2{font-size:26px;margin-bottom:4px}
+.eta{font:700 46px "Space Grotesk";color:var(--green);line-height:1;font-variant-numeric:tabular-nums}
+.driver{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center}
+.avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,#0f2a22);display:grid;place-items:center;font:700 20px "Space Grotesk";color:var(--green);border:2px solid var(--blue)}
+.plate{font:600 14px "Space Grotesk";background:#f2f4f7;color:#111;padding:3px 8px;border-radius:5px;letter-spacing:.04em;white-space:nowrap}
+.bar{height:8px;background:#232a3d;border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--blue);border-radius:4px;transition:width .6s}
+.steps{display:flex;gap:6px;font-size:13px;color:var(--mute)}
+.steps span{flex:1;padding-top:6px;border-top:3px solid #232a3d}
+.steps span.on{border-color:var(--green);color:var(--ink)}
+.stars{display:flex;gap:6px}
+.star{all:unset;cursor:pointer;font-size:30px;line-height:1;color:#3a4258;width:44px;height:44px;display:grid;place-items:center}
+.star.on{color:var(--orange)}
+.hist{list-style:none;margin:0;padding:0;font-size:14px}
+.hist li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:8px 0;border-top:1px solid var(--line)}
+.hist li:first-child{border-top:0}
+.why{font-size:14px;color:var(--mute)}
+.why b{color:var(--ink)}
+.toast{font-size:14px;padding:10px 12px;border-radius:10px;background:#2a1418;color:#ffb3bb;border:1px solid #5a2630}
+@media(max-width:860px){main{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto}.mapwrap{order:-1;padding:10px}.panel{border-right:0;border-top:1px solid var(--line);overflow:visible}body{height:auto}html{height:auto}.map{flex:none;aspect-ratio:1/1;width:100%;max-width:70vh;margin:0 auto;min-height:0}}
+@media(max-width:480px){header nav .btn{padding:0 10px;font-size:14px}header nav .btn+.btn{display:none}.brand small{display:none}.opts{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="index.html"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect x="1" y="1" width="26" height="26" rx="7" fill="#161926" stroke="#2b3145"/><path d="M6 20 L12 12 L17 16 L22 8" fill="none" stroke="#00a8ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="22" cy="8" r="3" fill="#00f59b"/><circle cx="6" cy="20" r="2.4" fill="#ffaa00"/></svg>RideFlow <small>Rider</small></a>
+  <nav><a class="btn ghost" href="index.html#sim">Operator view</a><a class="btn ghost" href="index.html#how">How it works</a></nav>
+</header>
+<main>
+  <section class="panel" id="panel" aria-live="polite"></section>
+  <section class="mapwrap" aria-label="City map">
+    <div class="map"><canvas id="cv" aria-label="Map of the RideFlow city. Click to set a pickup or drop point."></canvas><div class="maphint" id="hint" hidden></div></div>
+    <div class="legend"><span><i style="background:var(--green)"></i>Free driver</span><span><i style="background:var(--orange)"></i>Going to a pickup</span><span><i style="background:var(--blue)"></i>On a trip</span><span><i style="background:#fff;border:2px solid var(--blue)"></i>Your driver</span><span class="small">Orange zones have surge pricing. Simulated city, drivers and fares.</span></div>
+  </section>
+</main>
+<script>
+{
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const inr=v=>"₹"+v.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+const r2=v=>Math.round((v+Number.EPSILON)*100)/100;
+
+/* RideFlow rules (rideflow-core) */
+const zoneOf=p=>Math.min(4,Math.floor(p.y/20))*5+Math.min(4,Math.floor(p.x/20))+1;
+const roadKm=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y)*0.2*1.25;   // 1 unit = 0.2 km, road factor 1.25
+const minsFor=km=>km/30*60;                                  // 30 km/h
+const surgeOf=(D,S)=>{const R=D/Math.max(S,1);return{R,M:Math.min(2.5,Math.max(1,1+0.25*Math.max(0,R-1)))}};
+const baseFare=(km,min)=>40+12*km+2*min;
+let last=performance.now();
+const TICK_MS=800, STEP=2.5, RADIUS_KM=10, EXPIRE=15;
+
+const PLACES=[["Central Station",50,50],["City Mall",31,42],["Tech Park",83,22],["University Campus",17,79],["Airport",92,90],["Old Town Market",21,19],["Lakeside",66,72],["General Hospital",45,27],["Stadium",76,51],["Riverside Apartments",9,52],["Bus Terminal",55,91],["Museum Quarter",37,63]].map(([n,x,y])=>({n,x,y}));
+const NAMES=[["Ravi Kumar","Sedan"],["Asha Verma","Hatchback"],["Karan Singh","SUV"],["Meera Nair","Sedan"],["Arjun Mehta","Hatchback"],["Neha Gill","Sedan"],["Vikram Rao","SUV"],["Pooja Sharma","Hatchback"],["Rohit Bansal","Sedan"],["Simran Kaur","Hatchback"],["Aman Arora","SUV"],["Divya Iyer","Sedan"],["Sahil Khanna","Hatchback"],["Tanvi Joshi","Sedan"],["Nikhil Das","SUV"],["Ishita Sethi","Hatchback"],["Manav Chopra","Sedan"],["Riya Malhotra","Hatchback"],["Dev Bhatia","Sedan"],["Kavya Reddy","SUV"]];
+let seed=Date.now()%2147483647||7;const rnd=()=>(seed=seed*16807%2147483647)/2147483647;
+
+const city={tick:0,drivers:[],reqs:[],nextId:2001};
+NAMES.forEach(([name,veh],i)=>{const x=4+rnd()*92,y=4+rnd()*92;city.drivers.push({id:101+i,name,veh,x,y,px:x,py:y,status:"AVAILABLE",idleSince:-Math.floor(rnd()*30),rating:(4.5+rnd()*0.49).toFixed(1),plate:"PB-11-"+String.fromCharCode(65+i%26)+String.fromCharCode(65+(i*7)%26)+"-"+(1000+Math.floor(rnd()*9000)),req:null})});
+function randPt(){return{x:3+rnd()*94,y:3+rnd()*94}}
+function zoneSupply(z){return city.drivers.filter(d=>d.status==="AVAILABLE"&&zoneOf(d)===z).length}
+function zoneDemand(z){return city.reqs.filter(q=>q.status==="QUEUED"&&q.zone===z).length}
+function quote(p,d){const km=roadKm(p,d),min=minsFor(km),z=zoneOf(p),D=zoneDemand(z)+1,S=zoneSupply(z),{R,M}=surgeOf(D,S),base=r2(baseFare(km,min));return{km,min,z,D,S,R,M,base,fare:r2(base*M)}}
+function addReq(p,d,type,mine){const q=quote(p,d);const req={id:city.nextId++,p,d,type,zone:q.z,created:city.tick,status:"QUEUED",q,mine,driver:null};city.reqs.push(req);return req}
+const prio=q=>(q.type==="PRIORITY"?2:1)*10+(city.tick-q.created)*2;
+function dispatch(){
+  const queue=city.reqs.filter(q=>q.status==="QUEUED").sort((a,b)=>prio(b)-prio(a)||a.created-b.created||a.id-b.id);
+  for(const q of queue){
+    const c=city.drivers.filter(d=>d.status==="AVAILABLE").map(d=>{const km=roadKm(d,q.p),eta=minsFor(km),idle=city.tick-d.idleSince,credit=0.05*Math.min(idle,30);return{d,km,eta,idle,credit,score:eta-credit}}).filter(x=>x.km<=RADIUS_KM).sort((a,b)=>a.score-b.score||a.d.id-b.d.id);
+    if(!c.length)continue;
+    const w=c[0];w.d.status="RESERVED";w.d.req=q;q.status="ASSIGNED";q.driver=w.d;q.match={...w,count:c.length};q.assignedAt=city.tick;
+  }
+}
+function moveTo(d,t){const dx=t.x-d.x,dy=t.y-d.y,dd=Math.hypot(dx,dy);if(dd<=STEP){d.x=t.x;d.y=t.y;return true}d.x+=dx/dd*STEP;d.y+=dy/dd*STEP;return false}
+function tick(){
+  city.tick++;
+  for(const d of city.drivers){d.px=d.x;d.py=d.y}
+  // background riders (other people using RideFlow)
+  let n=0;const lam=0.42,L=Math.exp(-lam);let pr=1;do{n++;pr*=rnd()}while(pr>L);n--;
+  for(let i=0;i<n;i++){let p=rnd()<.35?{x:40+rnd()*20,y:40+rnd()*20}:randPt(),d=randPt();while(Math.hypot(d.x-p.x,d.y-p.y)<15)d=randPt();addReq(p,d,rnd()<.15?"PRIORITY":"STANDARD",false)}
+  for(const q of city.reqs)if(q.status==="QUEUED"&&city.tick-q.created>EXPIRE)q.status="EXPIRED";
+  dispatch();
+  for(const d of city.drivers){const q=d.req;if(!q)continue;
+    if(d.status==="RESERVED"){if(moveTo(d,q.p)){d.status="ON_TRIP";q.status="IN_PROGRESS";q.startedAt=city.tick}}
+    else if(d.status==="ON_TRIP"&&moveTo(d,q.d)){q.status="COMPLETED";q.doneAt=city.tick;d.status="AVAILABLE";d.req=null;d.idleSince=city.tick}}
+  city.reqs=city.reqs.filter(q=>q.mine||!(["COMPLETED","EXPIRED","CANCELLED"].includes(q.status)&&city.tick-q.created>30));
+  last=performance.now();
+  onTick();
+}
+
+/* ---------- rider app ---------- */
+let hist=[];try{hist=JSON.parse(localStorage.getItem("rideflow-trips")||"[]")}catch(e){hist=[]}
+const saveHist=()=>{try{localStorage.setItem("rideflow-trips",JSON.stringify(hist.slice(0,8)))}catch(e){}};
+const app={screen:"plan",from:{...PLACES[0],n:PLACES[0].n},to:{...PLACES[2]},type:"STANDARD",pinMode:null,req:null,rating:0};
+const placeName=p=>p?p.n:"";
+function setPlace(which,v){
+  if(v==="")app[which]=null;else app[which]={...PLACES[+v]};
+  if(app.from&&app.to&&Math.hypot(app.from.x-app.to.x,app.from.y-app.to.y)<3)app[which==="from"?"to":"from"]=null;
+  render();
+}
+function placeSelect(which,label,color){
+  const cur=app[which],idx=cur?PLACES.findIndex(p=>p.n===cur.n):-1,custom=cur&&idx<0;
+  return`<div class="field"><span class="dot" style="background:${color}"></span><div><label for="sel-${which}">${label}</label><select id="sel-${which}" data-w="${which}">${custom?`<option value="c" selected>Pinned point (${Math.round(cur.x)}, ${Math.round(cur.y)})</option>`:""}<option value=""${!cur?" selected":""}>Choose a place…</option>${PLACES.map((p,i)=>`<option value="${i}"${i===idx?" selected":""}>${esc(p.n)} · zone ${zoneOf(p)}</option>`).join("")}</select></div><button class="btn pin" type="button" data-pin="${which}" aria-pressed="${app.pinMode===which}">Pin on map</button></div>`;
+}
+function planHTML(){
+  let quoteBox="";
+  if(app.from&&app.to){
+    const s=quote(app.from,app.to);
+    const prioPrice=s.fare;
+    quoteBox=`<div class="opts" role="radiogroup" aria-label="Ride type">
+      <button class="opt" type="button" role="radio" data-type="STANDARD" aria-checked="${app.type==="STANDARD"}"><b>Standard</b><span>Joins the queue normally</span><span class="price">${esc(inr(s.fare))}</span></button>
+      <button class="opt" type="button" role="radio" data-type="PRIORITY" aria-checked="${app.type==="PRIORITY"}"><b>Priority</b><span>Served first in the queue</span><span class="price">${esc(inr(prioPrice))}</span></button></div>
+    <div class="card"><div class="rows">
+      <span>Distance by road</span><span>${s.km.toFixed(2)} km</span>
+      <span>Estimated trip time</span><span>${Math.round(s.min)} min</span>
+      <span>Base fare <span class="mute small">₹40 + ₹12/km + ₹2/min</span></span><span>${esc(inr(s.base))}</span>
+      <span>Surge in zone ${s.z} <span class="mute small">${s.D} riders, ${s.S} free drivers</span></span><span><span class="surge ${s.M>1?"":"ok"}">${s.M.toFixed(2)}×</span></span>
+      <span class="tot">You pay</span><span class="tot">${esc(inr(s.fare))}</span></div>
+      <p class="small mute" style="margin:8px 0 0">The price is locked when you book and never changes, even if surge rises during your trip.</p></div>
+    <button class="btn go big" id="book" type="button">Book ${app.type==="PRIORITY"?"Priority":"Standard"} ride</button>`;
+  } else quoteBox=`<div class="card mute">Choose where you are and where you're going, from the lists or by tapping the map.</div>`;
+  const h=hist.length?`<div><h3 style="font-size:17px;margin-bottom:6px">Your recent trips</h3><ul class="hist">${hist.slice(0,5).map(t=>`<li><span>${esc(t.from)} → ${esc(t.to)}<br><span class="mute">${esc(t.driver)} · ${"★".repeat(t.rating||0)}${t.rating?"":"not rated"}</span></span><span>${esc(inr(t.fare))}</span></li>`).join("")}</ul></div>`:"";
+  return`<div><h1 style="font-size:30px">Where to?</h1><p class="mute small" style="margin:4px 0 0">Book a ride in the RideFlow city. Matching and pricing follow the project's real rules.</p></div>
+  ${placeSelect("from","Pickup","var(--green)")}${placeSelect("to","Drop","var(--red)")}${quoteBox}${h}`;
+}
+function progressSteps(i){return`<div class="steps">${["Booked","Driver on the way","On trip","Arrived"].map((s,k)=>`<span class="${k<=i?"on":""}">${s}</span>`).join("")}</div>`}
+function driverCard(d){return`<div class="card driver"><div class="avatar">${esc(d.name.split(" ").map(x=>x[0]).join(""))}</div><div><b>${esc(d.name)}</b> <span class="mute small">★ ${esc(d.rating)}</span><br><span class="mute small">${esc(d.veh)} · driver #${d.id}</span></div><span class="plate">${esc(d.plate)}</span></div>`}
+function screenHTML(){
+  const q=app.req;
+  if(app.screen==="plan")return planHTML();
+  if(app.screen==="search"){const waited=city.tick-q.created,pos=city.reqs.filter(x=>x.status==="QUEUED").sort((a,b)=>prio(b)-prio(a)||a.created-b.created||a.id-b.id).indexOf(q)+1;
+    return`<div class="status"><h2>Finding your driver…</h2><p class="mute">Looking for free drivers within 10 km of ${esc(placeName(app.from))}.</p></div>${progressSteps(0)}
+    <div class="card"><div class="rows"><span>Ride</span><span>#${q.id} · ${q.type==="PRIORITY"?"Priority":"Standard"}</span><span>Place in queue</span><span>${pos>0?pos:"–"}</span><span>Waiting</span><span>${waited} min</span><span>Locked fare</span><span>${esc(inr(q.q.fare))}</span></div>
+    <div class="bar" style="margin-top:10px"><i style="width:${Math.min(100,waited/EXPIRE*100)}%;background:var(--orange)"></i></div><p class="small mute" style="margin:6px 0 0">If no driver is free within ${EXPIRE} minutes the request expires and you are not charged.</p></div>
+    <button class="btn danger" id="cancel" type="button">Cancel request</button>`}
+  if(app.screen==="coming"){const d=q.driver,km=roadKm(d,q.p),eta=Math.max(1,Math.ceil(minsFor(km)));
+    return`<div class="status"><h2>${esc(d.name.split(" ")[0])} is on the way</h2><p class="mute">Meet your driver at ${esc(placeName(app.from))}.</p></div>${progressSteps(1)}
+    <div><span class="mute small">Arriving in</span><div class="eta">${eta} min</div></div>${driverCard(d)}
+    <p class="why">Why this driver: best score of ${q.match.count} free driver${q.match.count>1?"s":""} nearby. Pickup ETA <b>${q.match.eta.toFixed(1)} min</b> minus an idle-time credit of <b>${q.match.credit.toFixed(2)}</b> (idle ${q.match.idle} min) gives <b>${q.match.score.toFixed(2)}</b>. Lowest score wins.</p>
+    <div class="card"><div class="rows"><span>Locked fare</span><span>${esc(inr(q.q.fare))}</span></div></div>
+    <button class="btn danger" id="cancel" type="button">Cancel ride</button>`}
+  if(app.screen==="trip"){const tot=Math.hypot(q.p.x-q.d.x,q.p.y-q.d.y),left=Math.hypot(q.driver.x-q.d.x,q.driver.y-q.d.y),pct=Math.max(0,Math.min(100,(1-left/tot)*100)),eta=Math.max(1,Math.ceil(minsFor(left*0.25)));
+    return`<div class="status"><h2>On your way to ${esc(placeName(app.to))}</h2><p class="mute">Sit back. Your fare is already locked.</p></div>${progressSteps(2)}
+    <div><span class="mute small">Arriving in about</span><div class="eta" style="color:var(--blue)">${eta} min</div></div>
+    <div class="bar"><i style="width:${pct.toFixed(0)}%"></i></div><p class="small mute" style="margin:-6px 0 0">${(left*0.25).toFixed(1)} km to go</p>${driverCard(q.driver)}`}
+  if(app.screen==="done"){const mins=q.doneAt-q.created;
+    return`<div class="status"><h2>You've arrived</h2><p class="mute">${esc(placeName(app.from))} → ${esc(placeName(app.to))}</p></div>${progressSteps(3)}
+    <div class="card"><div class="rows">
+      <span>Base fare (${q.q.km.toFixed(2)} km, ${Math.round(q.q.min)} min est.)</span><span>${esc(inr(q.q.base))}</span>
+      <span>Surge at booking</span><span>× ${q.q.M.toFixed(2)}</span>
+      <span class="tot">Total</span><span class="tot">${esc(inr(q.q.fare))}</span></div>
+      <p class="small mute" style="margin:8px 0 0">Ride #${q.id} with ${esc(q.driver.name)} · ${mins} min from booking to drop-off. Simulated payment, no real money.</p></div>
+    <div><b>Rate ${esc(q.driver.name.split(" ")[0])}</b><div class="stars" role="radiogroup" aria-label="Rating">${[1,2,3,4,5].map(n=>`<button class="star ${n<=app.rating?"on":""}" type="button" role="radio" aria-checked="${n===app.rating}" aria-label="${n} star${n>1?"s":""}" data-star="${n}">★</button>`).join("")}</div></div>
+    <button class="btn go big" id="again" type="button">Book another ride</button>`}
+  if(app.screen==="expired")return`<div class="status"><h2>No driver was free</h2><p class="mute">Ride #${q.id} waited ${EXPIRE} minutes without a free driver within 10 km, so it expired. You were not charged.</p></div><div class="toast">Busy right now. Priority rides are served first, or try a pickup nearer the centre.</div><button class="btn go big" id="again" type="button">Try again</button>`;
+  if(app.screen==="cancelled")return`<div class="status"><h2>Ride cancelled</h2><p class="mute">The driver has been released back to the fleet. You were not charged.</p></div><button class="btn go big" id="again" type="button">Book a ride</button>`;
+}
+let lastScreenKey="";
+function render(){
+  const html=screenHTML();
+  if(html!==lastScreenKey){const f=document.activeElement&&document.activeElement.id;$("panel").innerHTML=html;lastScreenKey=html;if(f&&$(f))$(f).focus()}
+  const h=$("hint");
+  if(app.pinMode){h.hidden=false;h.textContent="Tap the map to set your "+(app.pinMode==="from"?"pickup":"drop")}else h.hidden=true;
+}
+function onTick(){
+  const q=app.req;
+  if(q){
+    if(app.screen==="search"&&q.status==="ASSIGNED")app.screen="coming";
+    if(app.screen==="search"&&q.status==="EXPIRED")app.screen="expired";
+    if((app.screen==="coming"||app.screen==="search")&&q.status==="IN_PROGRESS")app.screen="trip";
+    if(app.screen==="trip"&&q.status==="COMPLETED"){app.screen="done";app.rating=0;hist.unshift({from:placeName(app.from),to:placeName(app.to),fare:q.q.fare,driver:q.driver.name,rating:0});saveHist()}
+  }
+  if(app.screen!=="plan"||!document.querySelector("#panel select:focus"))render();
+}
+$("panel").addEventListener("change",e=>{const w=e.target.dataset.w;if(w&&e.target.value!=="c")setPlace(w,e.target.value)});
+$("panel").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.pin){app.pinMode=app.pinMode===b.dataset.pin?null:b.dataset.pin;lastScreenKey="";render();return}
+  if(b.dataset.type){app.type=b.dataset.type;render();return}
+  if(b.id==="book"){app.req=addReq({...app.from},{...app.to},app.type,true);app.screen="search";app.pinMode=null;dispatch();onTick();return}
+  if(b.id==="cancel"){const q=app.req;if(q.driver){q.driver.status="AVAILABLE";q.driver.req=null;q.driver.idleSince=city.tick}q.status="CANCELLED";app.screen="cancelled";render();return}
+  if(b.id==="again"){app.req=null;app.screen="plan";render();return}
+  if(b.dataset.star){app.rating=+b.dataset.star;if(hist[0])hist[0].rating=app.rating;saveHist();render();return}
+});
+/* map */
+const cv=$("cv"),ctx=cv.getContext("2d");
+cv.addEventListener("click",e=>{
+  if(app.screen!=="plan")return;
+  const b=cv.getBoundingClientRect(),x=(e.clientX-b.left)/b.width*100,y=(e.clientY-b.top)/b.height*100;
+  const which=app.pinMode||(!app.from?"from":"to");
+  const near=PLACES.find(p=>Math.hypot(p.x-x,p.y-y)<4);
+  app[which]=near?{...near}:{n:"Pinned point ("+Math.round(x)+", "+Math.round(y)+")",x,y};
+  app.pinMode=null;lastScreenKey="";render();
+});
+function pinShape(x,y,col,label,W){ctx.fillStyle=col;ctx.beginPath();ctx.arc(x,y-14,9,Math.PI,0);ctx.lineTo(x,y);ctx.closePath();ctx.fill();ctx.fillStyle="#0b0c10";ctx.beginPath();ctx.arc(x,y-14,3.5,0,7);ctx.fill();
+  if(label){ctx.font="600 13px Inter,sans-serif";const tw=ctx.measureText(label).width;let lx=Math.min(Math.max(x-tw/2-8,4),W-tw-20);ctx.fillStyle="rgba(11,12,16,.9)";ctx.fillRect(lx,y-48,tw+16,22);ctx.fillStyle="#e6ebf2";ctx.fillText(label,lx+8,y-32)}}
+function draw(){
+  const W=cv.clientWidth,H=cv.clientHeight,dpr=devicePixelRatio||1;
+  if(W&&(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr))){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr)}
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const S=Math.min(W,H),ox=(W-S)/2,oy=(H-S)/2,k=S/100,P=(x,y)=>[ox+x*k,oy+y*k];
+  ctx.fillStyle="#0b0c10";ctx.fillRect(0,0,W,H);ctx.fillStyle="#0d0f17";ctx.fillRect(ox,oy,S,S);
+  for(let z=1;z<=25;z++){const c=(z-1)%5,r=Math.floor((z-1)/5),{M}=surgeOf(zoneDemand(z),zoneSupply(z));if(M>1){ctx.fillStyle=`rgba(255,${Math.round(170-110*(M-1)/1.5)},0,${0.08+0.2*(M-1)/1.5})`;ctx.fillRect(ox+c*20*k,oy+r*20*k,20*k,20*k)}}
+  ctx.strokeStyle="#1c2233";ctx.lineWidth=1;for(let i=0;i<=10;i++){ctx.beginPath();ctx.moveTo(ox+i*10*k,oy);ctx.lineTo(ox+i*10*k,oy+S);ctx.moveTo(ox,oy+i*10*k);ctx.lineTo(ox+S,oy+i*10*k);ctx.stroke()}
+  ctx.strokeStyle="#2b3145";for(let i=1;i<5;i++){ctx.beginPath();ctx.moveTo(ox+i*20*k,oy);ctx.lineTo(ox+i*20*k,oy+S);ctx.moveTo(ox,oy+i*20*k);ctx.lineTo(ox+S,oy+i*20*k);ctx.stroke()}
+  ctx.font=(S<420?"10px":"12px")+" Inter,sans-serif";
+  for(const p of PLACES){const[x,y]=P(p.x,p.y);ctx.fillStyle="#3a4258";ctx.fillRect(x-3,y-3,6,6);if(S>=420){ctx.fillStyle="#6f7a90";ctx.fillText(p.n,x+6,y+4)}}
+  const t=Math.min(1,(performance.now()-last)/TICK_MS);
+  const pos=d=>P(d.px+(d.x-d.px)*t,d.py+(d.y-d.py)*t);
+  const q=app.req,mine=q&&q.driver&&["coming","trip"].includes(app.screen)?q.driver:null;
+  const from=q?q.p:app.from,to=q?q.d:app.to;
+  if(from&&to){const[a,b]=P(from.x,from.y),[c,d]=P(to.x,to.y);ctx.strokeStyle="rgba(0,168,255,.75)";ctx.lineWidth=3;ctx.setLineDash(app.screen==="trip"?[]:[8,6]);ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c,d);ctx.stroke();ctx.setLineDash([])}
+  if(mine&&app.screen==="coming"){const[a,b]=pos(mine),[c,d]=P(q.p.x,q.p.y);ctx.strokeStyle="rgba(255,170,0,.8)";ctx.lineWidth=2;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c,d);ctx.stroke();ctx.setLineDash([])}
+  const col={AVAILABLE:"#00f59b",RESERVED:"#ffaa00",ON_TRIP:"#00a8ff"};
+  for(const d of city.drivers){if(d===mine)continue;const[x,y]=pos(d);ctx.beginPath();ctx.arc(x,y,S<420?3.5:5,0,7);ctx.fillStyle=col[d.status];ctx.globalAlpha=mine?.55:1;ctx.fill();ctx.globalAlpha=1}
+  for(const r of city.reqs)if(!r.mine&&r.status==="QUEUED"){const[x,y]=P(r.p.x,r.p.y);ctx.fillStyle="rgba(255,71,87,.7)";ctx.fillRect(x-2.5,y-2.5,5,5)}
+  if(from){const[x,y]=P(from.x,from.y);pinShape(x,y,"#00f59b",app.screen==="trip"||app.screen==="done"?"":"Pickup",W)}
+  if(to){const[x,y]=P(to.x,to.y);pinShape(x,y,"#ff4757","Drop",W)}
+  if(mine){const[x,y]=pos(mine);ctx.beginPath();ctx.arc(x,y,10,0,7);ctx.fillStyle="#fff";ctx.fill();ctx.lineWidth=3;ctx.strokeStyle="#00a8ff";ctx.stroke();ctx.font="600 13px Inter";ctx.fillStyle="#e6ebf2";ctx.fillText(mine.name.split(" ")[0],x+14,y+4)}
+  requestAnimationFrame(draw);
+}
+for(let i=0;i<25;i++)tick(); // warm the city up so it looks lived-in
+render();draw();setInterval(tick,TICK_MS);
+}
+</script>
+</body>
+</html>

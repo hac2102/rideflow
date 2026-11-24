@@ -7,7 +7,7 @@
 [![JavaFX 21](https://img.shields.io/badge/JavaFX-21-blueviolet.svg)](https://openjfx.io/)
 [![Build Status](https://img.shields.io/badge/Build-Passing_100%25-success.svg)]()
 
-**🌐 Project website:** https://hac2102.github.io/rideflow/ (live in-browser simulator, guided demo, results). Run it locally with `scripts\run_website.cmd` or `python -m http.server 8000 -d docs`.
+**🌐 Project website:** https://hac2102.github.io/rideflow/ (book a ride as a rider, live operator simulator, guided demo, results). Run it locally with `scripts\run_website.cmd` or `python -m http.server 8000 -d docs`.
 
 > An enterprise-grade transportation operations simulator engineered in **Java 21 LTS**, **Spring Boot**, **MySQL 8 (Raw JDBC)**, and **JavaFX**. Demonstrates intelligent driver-rider matching, starvation-resistant priority queues, dynamic supply-demand surge pricing, discrete-event simulation, and ACID-compliant transactional concurrency control without ORM abstractions.
 
