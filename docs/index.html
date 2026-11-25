@@ -85,6 +85,22 @@ select,input[type=number]{min-height:44px;font:16px Inter,sans-serif;background:
 .feed{font:13px/1.55 "JetBrains Mono",monospace;height:220px;overflow-y:auto;margin:0;padding:0;list-style:none}
 .feed li{padding:3px 0;border-top:1px solid #1f2436;color:#c8d1de}
 .feed .t{color:var(--mute)}.feed .A{color:var(--green)}.feed .R{color:var(--blue)}.feed .X{color:var(--red)}.feed .C{color:var(--orange)}
+.exp h3{align-items:center;flex-wrap:wrap}
+.zsel{display:flex;align-items:center;gap:8px;font-weight:500;color:var(--mute)}
+.zsel select{min-height:40px;font-size:15px}
+.expg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}
+.expg .btn{width:100%}
+.cnt{display:flex;justify-content:space-between;font-size:13px;color:var(--mute)}
+.cnt output{font-weight:600;color:var(--ink)}
+.expg input[type=range]{width:100%;accent-color:var(--green);height:30px;margin:0 0 4px}
+.expg p{font-size:13px;color:var(--mute);margin:6px 0 0}
+.btn.warn{background:#3b2a07;border-color:#6b4a0c;color:#ffd08a}
+.zcard{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+.zcard div{font-size:13px;color:var(--mute)}
+.zcard b{display:block;font:600 20px "Space Grotesk";color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
+.zcard em{font-style:normal;font-size:12px;display:block}
+.zcard .up{color:var(--orange)}.zcard .dn{color:var(--green)}
+.zcard .cap{grid-column:1/-1;font-size:13px}
 .why{font-size:14px;color:var(--mute);min-height:44px}
 .why b{color:var(--ink)}
 .note{font-size:13px;color:var(--mute);padding:10px 14px;border-top:1px solid var(--line)}
@@ -181,7 +197,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 @media(max-width:980px){.cbody{grid-template-columns:minmax(0,1fr)}.mapbox{border-right:0;border-bottom:1px solid var(--line)}.map{max-width:640px}.steps{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:22px}.steps::before{display:none}.docs{grid-template-columns:repeat(2,minmax(0,1fr))}.team{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.herohead,.grid2,.calc{grid-template-columns:minmax(0,1fr)}.qs{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:760px){.tour{grid-template-columns:minmax(0,1fr)}.tour .row{justify-content:flex-start}.howto{grid-template-columns:minmax(0,1fr)}}
-@media(max-width:600px){.menu{display:inline-flex}.links{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:var(--bg);border-bottom:1px solid var(--line);padding:8px max(5vw,16px) 14px;margin:0}.links.open{display:flex}.links a{padding:12px 10px}nav.top .wrap{position:relative}.duel,.verdict,.race,.duo{grid-template-columns:minmax(0,1fr)}.steps{grid-template-columns:minmax(0,1fr)}.bar{grid-template-columns:7em minmax(0,1fr) 4.8em}table{font-size:13px}th,td{padding:6px 4px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:3px 0}.stack td::before{content:attr(data-l);color:var(--mute)}.kpi{padding:10px}}
+@media(max-width:600px){.expg,.zcard{grid-template-columns:repeat(2,minmax(0,1fr))}.menu{display:inline-flex}.links{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:var(--bg);border-bottom:1px solid var(--line);padding:8px max(5vw,16px) 14px;margin:0}.links.open{display:flex}.links a{padding:12px 10px}nav.top .wrap{position:relative}.duel,.verdict,.race,.duo{grid-template-columns:minmax(0,1fr)}.steps{grid-template-columns:minmax(0,1fr)}.bar{grid-template-columns:7em minmax(0,1fr) 4.8em}table{font-size:13px}th,td{padding:6px 4px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:3px 0}.stack td::before{content:attr(data-l);color:var(--mute)}.kpi{padding:10px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.flash{animation:none}.lane li{transition:none}}
 </style>
 </head>
@@ -226,9 +242,13 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
           <label class="f" for="spd">Speed<select id="spd"><option value="1">1×</option><option value="2" selected>2×</option><option value="4">4×</option></select></label>
           <label class="f" for="seed">Seed<input id="seed" type="number" value="42" inputmode="numeric"></label>
         </div>
-        <div class="row">
-          <button class="btn" id="rush" type="button">Rush-hour spike, zone 13</button>
-          <button class="btn" id="mob" type="button">Mobilise 5 drivers</button>
+        <div class="box exp">
+          <h3>Try a what-if <label class="zsel" for="zone">in <select id="zone"></select></label></h3>
+          <div class="expg">
+            <div><label class="cnt" for="nR">Riders booking at once <output id="oR">12</output></label><input type="range" id="nR" min="1" max="30" value="12"><button class="btn warn" id="rush" type="button">Simulate rush hour</button><p>Demand outruns drivers, so prices rise and people wait.</p></div>
+            <div><label class="cnt" for="nD">Drivers to add <output id="oD2">5</output></label><input type="range" id="nD" min="1" max="20" value="5"><button class="btn" id="mob" type="button">Add 5 drivers</button><p>Brings supply back, so the queue clears and prices fall.</p></div>
+          </div>
+          <div class="zcard" id="zcard"></div>
         </div>
         <div class="why box" id="why">Click anywhere on the map to request a ride from that spot.</div>
         <div class="box"><h3>Dispatch queue <span class="mute num" id="qn"></span></h3><ul class="q" id="queue"></ul></div>
@@ -492,11 +512,12 @@ function render(){
   const zs=zoneStats(), avgM=zs.reduce((a,b)=>a+b.M,0)/25, maxM=Math.max(...zs.map(z=>z.M));
   const k=[["Tick "+S.tick,clock(S.tick)+" simulated","","One tick is one simulated minute"],[av+" / "+on,"Drivers available","g","Available drivers out of drivers on shift"],[qd.length,"Queued","o","Requests waiting for a driver, ordered by priority score"],[act,"Active trips","bl","Drivers heading to a pickup or carrying a rider"],[S.completed,"Completed","","Trips finished in this run"],[S.expired,"Expired","","Requests that waited over 15 minutes with no eligible driver"],[avgM.toFixed(2)+"×","Avg surge (peak "+maxM.toFixed(1)+"×)","","Average surge multiplier over the 25 zones, and the highest zone"],["₹"+Math.round(S.revenue).toLocaleString("en-IN"),"Sim revenue","g","Sum of locked fares for completed trips"]];
   $("kpis").innerHTML=k.map(([b,s,c,t])=>`<div class="kpi ${c}" title="${esc(t)}"><b>${esc(b)}</b><small>${esc(s)}</small></div>`).join("");
+  if($("zcard"))zoneCard();
   $("qn").textContent=qd.length?qd.length+" waiting":"";
   $("queue").innerHTML=qd.length?qd.slice(0,6).map(q=>`<li><span class="tag ${q.type==="PRIORITY"?"p":""}">${q.type==="PRIORITY"?"Priority":"Standard"}</span><span>#${q.id} · zone ${q.zone} · waited ${S.tick-q.created} min<br><span class="mute small">priority score ${prioScore(q)}</span></span><span class="num">${esc(inr(q.fare))}</span></li>`).join(""):`<li><span></span><span class="mute">Queue is empty. Every request has a driver.</span><span></span></li>`;
   $("feed").innerHTML=S.events.slice(0,40).map(e=>`<li><span class="t">[${e.t}]</span> <span class="${e.cls}">${esc(e.type)}</span> ${esc(e.msg)}</li>`).join("");
   const w=S.lastWhy;
-  if(w)$("why").innerHTML=`Last match: <b>ride #${w.q.id} → driver #${w.w.v.id}</b> (${esc(w.w.v.name)}, ${esc(w.w.v.veh)}), best of ${w.n} eligible within 10&nbsp;km. ETA ${w.w.eta.toFixed(1)} min, idle ${w.w.idle} min${w.strat==="WF"?`, score ${w.w.score.toFixed(2)}`:""}. Fare locked at ${esc(inr(w.q.fare))}.`;
+  if(w&&!(S.hold>S.tick))$("why").innerHTML=`Last match: <b>ride #${w.q.id} → driver #${w.w.v.id}</b> (${esc(w.w.v.name)}, ${esc(w.w.v.veh)}), best of ${w.n} eligible within 10&nbsp;km. ETA ${w.w.eta.toFixed(1)} min, idle ${w.w.idle} min${w.strat==="WF"?`, score ${w.w.score.toFixed(2)}`:""}. Fare locked at ${esc(inr(w.q.fare))}.`;
 }
 /* canvas */
 const cv=$("cv"),ctx=cv.getContext("2d");
@@ -510,6 +531,7 @@ function draw(){
   for(let i=0;i<25;i++){const c=i%5,r=Math.floor(i/5),M=zs[i].M;if(M>1){ctx.fillStyle=`rgba(255,${Math.round(170-110*(M-1)/1.5)},0,${0.08+0.22*(M-1)/1.5})`;ctx.fillRect(c*20*sx,r*20*sy,20*sx,20*sy)}}
   ctx.strokeStyle="#232a3d";ctx.lineWidth=1;
   for(let i=1;i<5;i++){ctx.beginPath();ctx.moveTo(i*20*sx,0);ctx.lineTo(i*20*sx,H);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i*20*sy);ctx.lineTo(W,i*20*sy);ctx.stroke()}
+  {const z=+($("zone")&&$("zone").value||13),c=(z-1)%5,r=Math.floor((z-1)/5);ctx.strokeStyle="#00f59b";ctx.lineWidth=2.5;ctx.setLineDash([6,4]);ctx.strokeRect(c*20*sx+1.5,r*20*sy+1.5,20*sx-3,20*sy-3);ctx.setLineDash([]);ctx.lineWidth=1}
   ctx.font=(W<420?"10px":"12px")+" Inter,sans-serif";ctx.textBaseline="top";
   for(let i=0;i<25;i++){const c=i%5,r=Math.floor(i/5),M=zs[i].M;ctx.fillStyle="#7d889c";ctx.fillText((W<420?"Z":"Zone ")+(i+1),c*20*sx+6,r*20*sy+5);if(M>1){ctx.fillStyle="#ffc266";ctx.fillText(M.toFixed(2)+"×",c*20*sx+6,r*20*sy+(W<420?17:20))}}
   const t=Math.min(1,(performance.now()-lastTick)/(interval()*.9));
@@ -532,10 +554,29 @@ $("scn").onchange=()=>{reset();loop()};
 $("seed").onchange=()=>{reset();loop()};
 $("spd").onchange=loop;
 $("strat").onchange=()=>log("SIM","Strategy switched to "+($("strat").value==="WF"?"weighted fair":"nearest driver"),"C");
-$("rush").onclick=()=>{for(let i=0;i<12;i++)newReq(false,{x:41+S.r()*18,y:41+S.r()*18});log("SHOCK","Rush-hour spike: 12 requests injected into zone 13","X");render()};
-$("mob").onclick=()=>{let k=0;for(const v of S.drivers)if(v.status==="OFFLINE"&&k<5){v.status="AVAILABLE";v.x=v.px=42+S.r()*16;v.y=v.py=42+S.r()*16;v.idleSince=S.tick;k++}
-  for(;k<5;k++){const x=42+S.r()*16,y=42+S.r()*16;S.drivers.push({id:101+S.drivers.length,name:NAMES[S.drivers.length%25],veh:VEH[k%4],x,y,px:x,py:y,status:"AVAILABLE",idleSince:S.tick,trips:0,earn:0,req:null})}
-  log("FLEET","5 reserve drivers mobilised into zone 13","A");render()};
+const ZNAME={1:"north-west edge",3:"north",5:"north-east edge",7:"Old Town",9:"Tech Park side",11:"west",13:"city centre",15:"east",17:"University side",19:"Lakeside",21:"south-west edge",23:"south",25:"airport corner"};
+$("zone").innerHTML=Array.from({length:25},(_,i)=>`<option value="${i+1}"${i===12?" selected":""}>Zone ${i+1}${ZNAME[i+1]?" · "+ZNAME[i+1]:""}</option>`).join("");
+const selZ=()=>+$("zone").value;
+const zBox=z=>{const c=(z-1)%5,r=Math.floor((z-1)/5);return{x:c*20,y:r*20}};
+const inZone=z=>{const b=zBox(z);return{x:b.x+2+S.r()*16,y:b.y+2+S.r()*16}};
+function zoneNow(z){const qs=S.reqs.filter(q=>q.status==="QUEUED"&&q.zone===z),sup=S.drivers.filter(v=>v.status==="AVAILABLE"&&zoneOf(v.x,v.y)===z).length,{M}=surgeOf(qs.length,sup);return{D:qs.length,S:sup,M,W:qs.length?qs.reduce((a,q)=>a+S.tick-q.created,0)/qs.length:0}}
+let before=null;
+function zoneCard(){
+  const z=selZ(),n=zoneNow(z),b=before&&before.z===z?before:null;
+  const d=(k,fmt,better)=>{if(!b)return"";const v=n[k]-b[k];if(Math.abs(v)<0.005)return`<em>no change</em>`;const good=better==="down"?v<0:v>0;return`<em class="${good?"dn":"up"}">${v>0?"▲":"▼"} ${fmt(Math.abs(v))} since ${b.what}</em>`};
+  $("zcard").innerHTML=`<div>Riders waiting<b>${n.D}</b>${d("D",x=>Math.round(x),"down")}</div><div>Free drivers<b>${n.S}</b>${d("S",x=>Math.round(x),"up")}</div><div>Price surge<b>${n.M.toFixed(2)}×</b>${d("M",x=>x.toFixed(2)+"×","down")}</div><div>Avg wait<b>${n.W.toFixed(1)} min</b>${d("W",x=>x.toFixed(1),"down")}</div><p class="cap mute">Zone ${z} right now, outlined on the map. A fare quoted here costs ${n.M.toFixed(2)}× the base price.</p>`;
+}
+function snap(what){before={z:selZ(),what,...zoneNow(selZ())}}
+$("zone").onchange=()=>{before=null;render()};
+$("rush").onclick=()=>{const z=selZ();snap("rush hour");const nR=+$("nR").value,rs=[];for(let i=0;i<nR;i++)rs.push(newReq(false,inZone(z)));const pk=Math.max(...rs.map(q=>q.M)),fst=rs[0].M,avgF=rs.reduce((a,q)=>a+q.fare,0)/nR,avgB=rs.reduce((a,q)=>a+q.base,0)/nR;
+  log("SHOCK","Rush hour: "+nR+" riders booked at once in zone "+z+" · surge "+fst.toFixed(2)+"× → "+pk.toFixed(2)+"×","X");
+  $("why").innerHTML=`<b>Rush hour in zone ${z}.</b> As the ${nR} rider${nR>1?"s":""} booked, the zone's surge climbed from <b>${fst.toFixed(2)}×</b> to <b>${pk.toFixed(2)}×</b>, so their locked fares averaged <b>${esc(inr(avgF))}</b> instead of ${esc(inr(avgB))}. Nearby drivers now rush in; if they run out, riders wait and new quotes stay high.`;S.hold=S.tick+5;render();flash("zcard")};
+$("mob").onclick=()=>{const z=selZ(),n=+$("nD").value;snap("adding drivers");let k=0;for(const v of S.drivers)if(v.status==="OFFLINE"&&k<n){const p=inZone(z);v.status="AVAILABLE";v.x=v.px=p.x;v.y=v.py=p.y;v.idleSince=S.tick;k++}
+  for(;k<n;k++){const p=inZone(z);S.drivers.push({id:101+S.drivers.length,name:NAMES[S.drivers.length%25],veh:VEH[k%4],x:p.x,y:p.y,px:p.x,py:p.y,status:"AVAILABLE",idleSince:S.tick,trips:0,earn:0,req:null})}
+  const b4=zoneNow(z);dispatch();const af=zoneNow(z);
+  log("FLEET",n+" extra driver"+(n>1?"s":"")+" sent to zone "+z,"A");$("why").innerHTML=`<b>${n} driver${n>1?"s":""} added to zone ${z}.</b> ${b4.D?`They matched ${b4.D-af.D} waiting rider${b4.D-af.D===1?"":"s"} straight away. `:""}More free drivers means the surge for new bookings here is now <b>${af.M.toFixed(2)}×</b>.`;S.hold=S.tick+5;render();flash("zcard")};
+$("nR").oninput=()=>{$("oR").textContent=$("nR").value};
+$("nD").oninput=()=>{$("oD2").textContent=$("nD").value;$("mob").textContent="Add "+$("nD").value+" driver"+(+$("nD").value>1?"s":"")};
 cv.addEventListener("click",e=>{const b=cv.getBoundingClientRect(),x=(e.clientX-b.left)/b.width*100,y=(e.clientY-b.top)/b.height*100;if(x<0||x>100||y<0||y>100)return;const q=newReq(true,{x,y});$("why").innerHTML=`You requested <b>ride #${q.id}</b> in zone ${q.zone}. Quote locked at <b>${esc(inr(q.fare))}</b> (base ${esc(inr(q.base))} × ${q.M.toFixed(2)}). It joins the queue and is dispatched on the next tick.`;render()});
 reset();loop();draw();
 
@@ -616,8 +657,8 @@ const TOUR=[
  {t:"A live city of 20 drivers",x:"The 100×100 city is split into 25 zones. Green drivers are free, orange ones are driving to a pickup, blue ones carry a rider. Every tick is one simulated minute.",go:()=>{setSel("scn","NORMAL");setSel("strat","WF");reset();running=true;loop();flash("map")}},
  {t:"A rider requests a trip",x:"We just placed a STANDARD request at (49, 51). RideFlow validated it and locked the fare straight away from distance, duration and the zone's surge. The fare never changes after this.",go:()=>{const q=newReq(true,{x:49,y:51});S.lastWhy=null;$("why").innerHTML=`Ride <b>#${q.id}</b> requested in zone ${q.zone}. Fare locked at <b>${esc(inr(q.fare))}</b> (base ${esc(inr(q.base))} × ${q.M.toFixed(2)}).`;render();flash("why")}},
  {t:"The dispatcher picks a driver",x:"On the next tick, every available driver within 10 km is scored: pickup ETA minus a small, capped credit for idle time. The lowest score wins and is reserved in one database transaction. The box below explains the choice.",go:()=>{running=false;loop();tick();flash("why")}},
- {t:"Rush hour hits downtown",x:"Twelve requests just arrived in zone 13. Demand now outruns supply there, so the surge multiplier rises (watch the orange heat on the map) and new quotes cost more. The queue orders riders by type plus waiting time.",go:()=>{$("rush").click();running=true;loop();flash("queue")}},
- {t:"Send more drivers",x:"Mobilising five reserve drivers into zone 13 adds supply. As they absorb the queue, the demand-to-supply ratio falls and surge cools back toward 1.0×.",go:()=>{$("mob").click();flash("map")}},
+ {t:"Rush hour hits the city centre",x:"Twelve riders just booked at once in zone 13 (outlined on the map). Demand now outruns free drivers there, so the price surge rises and riders wait. The zone panel on the right shows the before and after.",go:()=>{$("zone").value=13;$("nR").value=12;$("nR").oninput();before=null;$("rush").click();running=true;loop()}},
+ {t:"Send more drivers",x:"Five extra drivers just arrived in zone 13. As they pick up the waiting riders, demand and supply balance again and the surge falls back toward 1.00×.",go:()=>{$("zone").value=13;$("nD").value=5;$("nD").oninput();$("mob").click()}},
  {t:"Try it yourself",x:"Switch to Low supply or High demand to see requests expire, or compare Weighted fair with Nearest driver. Click the map to add rides. The sections below explain each rule with interactive examples.",go:()=>{flash("scn")}}
 ];
 let ti=-1;
